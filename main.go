@@ -32,8 +32,8 @@ func main() {
                     interagir()
                 } else {
                     mover(ev.Ch)
-                    
                 }
+                mapa.MontaMapa()
                 mapa.DesenhaMapa()
         }
     }
@@ -58,7 +58,7 @@ func carregarMapa(nomeArquivo string) {
         for _, char := range linhaTexto {
             switch char {
                 case '☠':
-                    zombie := Elemento {
+                    zombie := &Elemento {
                         simbolo: '☠',
                         cor: termbox.ColorDefault,
                         corFundo: termbox.ColorDefault,
@@ -70,7 +70,7 @@ func carregarMapa(nomeArquivo string) {
                     mapa.AdicionaElemento(zombie)
                     break
                 case '▤':
-                    parede := Elemento {
+                    parede := &Elemento {
                         simbolo: '▤',
                         cor: termbox.ColorBlack|termbox.AttrBold|termbox.AttrDim,
                         corFundo: termbox.ColorDarkGray,
@@ -82,7 +82,7 @@ func carregarMapa(nomeArquivo string) {
                     mapa.AdicionaElemento(parede)
                     break
                 case '#':
-                    barreira := Elemento {
+                    barreira := &Elemento {
                         simbolo: '#',
                         cor: termbox.ColorRed,
                         corFundo: termbox.ColorDefault,
@@ -94,7 +94,7 @@ func carregarMapa(nomeArquivo string) {
                     mapa.AdicionaElemento(barreira)
                     break
                 case '♣':
-                    vegetacao := Elemento {
+                    vegetacao := &Elemento {
                         simbolo: '♣',
                         cor: termbox.ColorGreen,
                         corFundo: termbox.ColorDefault,
@@ -106,7 +106,7 @@ func carregarMapa(nomeArquivo string) {
                     mapa.AdicionaElemento(vegetacao)
                     break
                 case '☺':
-                    personagem := Elemento {
+                    personagem := &Elemento {
                         simbolo: '☺',
                         cor: termbox.ColorBlack,
                         corFundo: termbox.ColorDefault,
@@ -115,11 +115,11 @@ func carregarMapa(nomeArquivo string) {
                         x: x,
                         y: y,
                     }
-                    playerRef = personagem
+                    playerRef = *personagem
                     mapa.AdicionaElemento(personagem)
                     break
                 case ' ':
-                    vazio := Elemento {
+                    vazio := &Elemento {
                         simbolo: ' ',
                         cor: termbox.ColorDefault,
                         corFundo: termbox.ColorDefault,
@@ -137,6 +137,7 @@ func carregarMapa(nomeArquivo string) {
         x = 0
         y++
     }
+    mapa.AdicionaIterativa()
     mapa.MontaMapa()
     if err := scanner.Err(); err != nil {
         panic(err)

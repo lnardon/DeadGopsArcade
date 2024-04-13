@@ -25,6 +25,14 @@ func (mapa *Map) MontaMapa() {
 	
 }
 
+func (mapa *Map) AdicionaIterativa() {
+	for _, elemento := range mapa.Elementos {
+		if(elemento.simbolo == '☺' || elemento.simbolo == '☠' || elemento.simbolo == '*') {
+			mapa.ThreadsInterativas = append(mapa.ThreadsInterativas, elemento)
+		}
+	}
+}
+
 func (mapa *Map) DesenhaMapa() {
 	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
     for y, linha := range mapa.Mapa {
@@ -35,8 +43,8 @@ func (mapa *Map) DesenhaMapa() {
     termbox.Flush()
 }
 
-func (mapa *Map) AdicionaElemento(elemento Elemento) {
-	mapa.Elementos = append(mapa.Elementos, elemento)
+func (mapa *Map) AdicionaElemento(elemento *Elemento) {
+	mapa.Elementos = append(mapa.Elementos, *elemento)
 }
 
 func (mapa *Map) RemoveElemento(id int) {
