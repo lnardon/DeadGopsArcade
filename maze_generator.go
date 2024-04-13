@@ -63,7 +63,7 @@ func printMaze(maze [][]rune) {
         fmt.Println()
     }
 }
-
+/*
 func main() {
     if len(os.Args) < 3 {
         fmt.Println("Usage: go run maze.go <width> <height>")
@@ -82,4 +82,4 @@ func main() {
 
     maze := generateMaze(width, height)
     printMaze(maze)
-}
+}*/
