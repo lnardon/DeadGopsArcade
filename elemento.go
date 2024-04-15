@@ -2,6 +2,7 @@ package main
 
 import (
 	"time"
+
 	"github.com/nsf/termbox-go"
 )
 
@@ -14,6 +15,20 @@ type Elemento struct {
 	interativo bool
 	x          int
 	y          int
+}
+
+func Mover(comando rune) {
+	lastMove = comando
+	switch comando {
+	case 'w':
+		playerRef.Move(playerRef.x, playerRef.y-1, &mapa)
+	case 'a':
+		playerRef.Move(playerRef.x-1, playerRef.y, &mapa)
+	case 's':
+		playerRef.Move(playerRef.x, playerRef.y+1, &mapa)
+	case 'd':
+		playerRef.Move(playerRef.x+1, playerRef.y, &mapa)
+	}
 }
 
 func (element *Elemento) Move(newX int, newY int, mapa *Map) {    
@@ -61,7 +76,29 @@ func (element *Elemento) MoveTiro(newX int, newY int, mapa *Map, direction rune)
     }
 }
 
+func (element *Elemento) SeguePlayer(player *Elemento) {
+	for {
+		//mutex.Lock()
+		if element.x < player.x {
+			element.x++
+		} else if element.x > player.x{
+			element.x--
+		}
+		if element.y < player.y {
+			element.y++
+		} else if element.y > player.y {
+			element.y--
+		}
+		//mutex.Unlock()
+		time.Sleep(time.Second)
+	}
+}
+
 func atualizaMapa() {
 	mapa.MontaMapa()
 	mapa.DesenhaMapa()
+}
+
+func interagir() {
+	//
 }

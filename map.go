@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bufio"
+	"os"
 
 	"github.com/nsf/termbox-go"
 )
@@ -50,7 +52,6 @@ func (mapa *Map) AdicionaElemento(elemento *Elemento) {
 func (mapa *Map) RemoveElemento(id int) {
     for index, elemento := range mapa.Elementos {
         if elemento.id == id {
-			//fmt.Println("Removendo elemento", elemento, "na posição", elemento.x, elemento.y, "do mapa")
             vazio := &Elemento{
                 id:       gerarIdUnico(),
                 simbolo:  ' ',
@@ -70,4 +71,98 @@ func (mapa *Map) RemoveElemento(id int) {
 
 func (mapa *Map) GetElemento(x int, y int) *Elemento {
 	return mapa.Mapa[y][x]
+}
+
+func carregarMapa(nomeArquivo string) {
+	arquivo, err := os.Open(nomeArquivo)
+	if err != nil {
+		panic(err)
+	}
+	defer arquivo.Close()
+
+	scanner := bufio.NewScanner(arquivo)
+	y := 0
+	x := 0
+	for scanner.Scan() {
+		linhaTexto := scanner.Text()
+		for _, char := range linhaTexto {
+			switch char {
+			case '☠':
+				zombie := &Elemento{
+					id: 		gerarIdUnico(),
+					simbolo:    '☠',
+					cor:        termbox.ColorDefault,
+					corFundo:   termbox.ColorDefault,
+					tangivel:   true,
+					interativo: false,
+					x:          x,
+					y:          y,
+				}
+				mapa.AdicionaElemento(zombie)
+				break
+			case '▤':
+				parede := &Elemento{
+					id: 		gerarIdUnico(),
+					simbolo:    '▤',
+					cor:        termbox.ColorBlack | termbox.AttrBold | termbox.AttrDim,
+					corFundo:   termbox.ColorDarkGray,
+					tangivel:   true,
+					interativo: false,
+					x:          x,
+					y:          y,
+				}
+				mapa.AdicionaElemento(parede)
+				break
+			case '#':
+				barreira := &Elemento{
+					id: 		gerarIdUnico(),
+					simbolo:    '#',
+					cor:        termbox.ColorRed,
+					corFundo:   termbox.ColorDefault,
+					tangivel:   true,
+					interativo: false,
+					x:          x,
+					y:          y,
+				}
+				mapa.AdicionaElemento(barreira)
+				break
+			case '☺':
+				personagem := &Elemento{
+					id: 		gerarIdUnico(),
+					simbolo:    '☺',
+					cor:        termbox.ColorBlack,
+					corFundo:   termbox.ColorDefault,
+					tangivel:   true,
+					interativo: false,
+					x:          x,
+					y:          y,
+				}
+				playerRef = personagem
+				mapa.AdicionaElemento(personagem)
+				break
+			case ' ':
+				vazio := &Elemento{
+					id: 		gerarIdUnico(),
+					simbolo:    ' ',
+					cor:        termbox.ColorDefault,
+					corFundo:   termbox.ColorDefault,
+					tangivel:   false,
+					interativo: false,
+					x:          x,
+					y:          y,
+				}
+				mapa.AdicionaElemento(vazio)
+				break
+
+			}
+			x++
+		}
+		x = 0
+		y++
+	}
+	mapa.AdicionaIterativa()
+	mapa.MontaMapa()
+	if err := scanner.Err(); err != nil {
+		panic(err)
+	}
 }
