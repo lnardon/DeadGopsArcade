@@ -36,6 +36,7 @@ func (mapa *Map) AdicionaIterativa() {
 }
 
 func (mapa *Map) DesenhaMapa() {
+	mutex.Lock()
 	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
 	for y, linha := range mapa.Mapa {
 		for x, elem := range linha {
@@ -43,6 +44,7 @@ func (mapa *Map) DesenhaMapa() {
 		}
 	}
 	termbox.Flush()
+	mutex.Unlock()
 }
 
 func (mapa *Map) AdicionaElemento(elemento *Elemento) {

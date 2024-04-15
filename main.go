@@ -1,6 +1,9 @@
 package main
 
 import (
+	"math/rand"
+	"sync"
+
 	"github.com/nsf/termbox-go"
 )
 
@@ -11,6 +14,7 @@ var lastMove rune
 var tiroX, tiroY int
 var maxZombies = 10
 var currentZombies = 0
+var mutex sync.Mutex
 
 func main() {
 	err := termbox.Init()
@@ -23,18 +27,23 @@ func main() {
 	mapa.DesenhaMapa()
 	for {
 		if currentZombies < maxZombies {
-			adicionaZumbi()
+			adicionaZumbi(
+				rand.Intn(80),
+				rand.Intn(30),
+			)
 			currentZombies++
 		}
 
 		switch ev := termbox.PollEvent(); ev.Type {
 		case termbox.EventKey:
 			if ev.Key == termbox.KeyEsc {
-				return // Sair do programa
+				return // exit
 			}
 			if ev.Ch == 'e' {
-				interagir()
-			} else if ev.Key == termbox.KeySpace {
+				interagir(playerRef.x, playerRef.y)
+			}
+			
+			if ev.Key == termbox.KeySpace {
 				go atirar()
 			} else {
 				Mover(ev.Ch)
