@@ -1,7 +1,6 @@
 package main
 
 import (
-	"time"
 
 	"github.com/nsf/termbox-go"
 )
@@ -49,22 +48,24 @@ func (mapa *Map) AdicionaElemento(elemento *Elemento) {
 }
 
 func (mapa *Map) RemoveElemento(id int) {
-	for index, elemento := range mapa.Elementos {
-		if elemento.id == id {
+    for index, elemento := range mapa.Elementos {
+        if elemento.id == id {
+			//fmt.Println("Removendo elemento", elemento, "na posição", elemento.x, elemento.y, "do mapa")
+            vazio := &Elemento{
+                id:       gerarIdUnico(),
+                simbolo:  ' ',
+                cor:      termbox.ColorDefault,
+                corFundo: termbox.ColorDefault,
+                tangivel: false,
+				interativo: false,
+                x:        elemento.x,
+                y:        elemento.y,
+            }
+            mapa.Elementos[index] = vazio
 			mapa.Elementos = append(mapa.Elementos[:index], mapa.Elementos[index+1:]...)
-			vazio := &Elemento{
-				id:       int(time.Nanosecond),
-				simbolo:  ' ',
-				cor:      termbox.ColorDefault,
-				corFundo: termbox.ColorDefault,
-				tangivel: false,
-				x:        elemento.x,
-				y:        elemento.y,
-			}
-			mapa.Elementos[index] = vazio
-			return
-		}
-	}
+            return
+        }
+    }
 }
 
 func (mapa *Map) GetElemento(x int, y int) *Elemento {

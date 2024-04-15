@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"os"
+	"math/rand"
 
 	"github.com/nsf/termbox-go"
 )
@@ -13,6 +14,9 @@ var efeitoNeblina = false
 var revelado [][]bool
 var raioVisao int = 3
 var playerRef *Elemento
+var idsUsados = make(map[int]bool)
+var lastMove rune
+var tiroX, tiroY int
 
 func main() {
 	err := termbox.Init()
@@ -23,6 +27,7 @@ func main() {
 
 	carregarMapa("map.txt")
 	mapa.DesenhaMapa()
+	adicionaZumbi()
 	for {
 		switch ev := termbox.PollEvent(); ev.Type {
 		case termbox.EventKey:
@@ -31,17 +36,29 @@ func main() {
 			}
 			if ev.Ch == 'e' {
 				interagir()
+			} else if ev.Key == termbox.KeySpace {
+				go atirar()
 			} else {
 				mover(ev.Ch)
 			}
 			mapa.MontaMapa()
-			mapa.DesenhaMapa()
+			mapa.DesenhaMapa()	
 		}
 	}
 }
 
 func interagir() {
 	//
+}
+
+func gerarIdUnico() int {
+    for {
+        id := rand.Int() // gera um número aleatório
+        if !idsUsados[id] {
+            idsUsados[id] = true
+            return id
+        }
+    }
 }
 
 func carregarMapa(nomeArquivo string) {
@@ -60,6 +77,7 @@ func carregarMapa(nomeArquivo string) {
 			switch char {
 			case '☠':
 				zombie := &Elemento{
+					id: 		gerarIdUnico(),
 					simbolo:    '☠',
 					cor:        termbox.ColorDefault,
 					corFundo:   termbox.ColorDefault,
@@ -72,6 +90,7 @@ func carregarMapa(nomeArquivo string) {
 				break
 			case '▤':
 				parede := &Elemento{
+					id: 		gerarIdUnico(),
 					simbolo:    '▤',
 					cor:        termbox.ColorBlack | termbox.AttrBold | termbox.AttrDim,
 					corFundo:   termbox.ColorDarkGray,
@@ -84,6 +103,7 @@ func carregarMapa(nomeArquivo string) {
 				break
 			case '#':
 				barreira := &Elemento{
+					id: 		gerarIdUnico(),
 					simbolo:    '#',
 					cor:        termbox.ColorRed,
 					corFundo:   termbox.ColorDefault,
@@ -94,20 +114,9 @@ func carregarMapa(nomeArquivo string) {
 				}
 				mapa.AdicionaElemento(barreira)
 				break
-			case '♣':
-				vegetacao := &Elemento{
-					simbolo:    '♣',
-					cor:        termbox.ColorGreen,
-					corFundo:   termbox.ColorDefault,
-					tangivel:   false,
-					interativo: false,
-					x:          x,
-					y:          y,
-				}
-				mapa.AdicionaElemento(vegetacao)
-				break
 			case '☺':
 				personagem := &Elemento{
+					id: 		gerarIdUnico(),
 					simbolo:    '☺',
 					cor:        termbox.ColorBlack,
 					corFundo:   termbox.ColorDefault,
@@ -121,6 +130,7 @@ func carregarMapa(nomeArquivo string) {
 				break
 			case ' ':
 				vazio := &Elemento{
+					id: 		gerarIdUnico(),
 					simbolo:    ' ',
 					cor:        termbox.ColorDefault,
 					corFundo:   termbox.ColorDefault,
@@ -146,6 +156,7 @@ func carregarMapa(nomeArquivo string) {
 }
 
 func mover(comando rune) {
+	lastMove = comando
 	switch comando {
 	case 'w':
 		playerRef.Move(playerRef.x, playerRef.y-1, &mapa)
@@ -156,4 +167,51 @@ func mover(comando rune) {
 	case 'd':
 		playerRef.Move(playerRef.x+1, playerRef.y, &mapa)
 	}
+}
+
+// adiciona zumbi para teste, pois se ele já estiver no mapa não da para matar
+func adicionaZumbi() {
+	zumbi := &Elemento{
+		id:       gerarIdUnico(),
+		simbolo:  '☠',
+		cor:      termbox.ColorDefault,
+		corFundo: termbox.ColorDefault,
+		tangivel: true,
+		interativo: false,
+		x:        15,
+		y:        15,
+	}
+	mapa.AdicionaElemento(zumbi)
+}
+
+func atirar() {
+    tiro := &Elemento{
+        id:       gerarIdUnico(),
+        simbolo:  '*',
+        cor:      termbox.ColorDefault,
+        corFundo: termbox.ColorDefault,
+        tangivel: false,
+        interativo: false,
+        x:        playerRef.x,
+        y:        playerRef.y,
+    }
+	switch lastMove {
+	case 'w':
+		tiroY = playerRef.y - 1
+		tiroX = playerRef.x
+	case 'a':
+		tiroY = playerRef.y
+		tiroX = playerRef.x - 1
+	case 's':
+		tiroY = playerRef.y + 1
+		tiroX = playerRef.x
+	case 'd':
+		tiroY = playerRef.y
+		tiroX = playerRef.x + 1
+	default:
+		tiroY = playerRef.y - 1
+		tiroX = playerRef.x
+	}
+    mapa.AdicionaElemento(tiro)
+    tiro.MoveTiro(tiroX, tiroY, &mapa, lastMove)
 }
