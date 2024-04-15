@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/nsf/termbox-go"
@@ -15,20 +16,6 @@ type Elemento struct {
 	interativo bool
 	x          int
 	y          int
-}
-
-func Mover(comando rune) {
-	lastMove = comando
-	switch comando {
-	case 'w':
-		playerRef.Move(playerRef.x, playerRef.y-1, &mapa)
-	case 'a':
-		playerRef.Move(playerRef.x-1, playerRef.y, &mapa)
-	case 's':
-		playerRef.Move(playerRef.x, playerRef.y+1, &mapa)
-	case 'd':
-		playerRef.Move(playerRef.x+1, playerRef.y, &mapa)
-	}
 }
 
 func (element *Elemento) Move(newX int, newY int, mapa *Map) {    
@@ -78,7 +65,6 @@ func (element *Elemento) MoveTiro(newX int, newY int, mapa *Map, direction rune)
 
 func (element *Elemento) SeguePlayer(player *Elemento) {
 	for {
-		//mutex.Lock()
 		if element.x < player.x {
 			element.x++
 		} else if element.x > player.x{
@@ -89,7 +75,6 @@ func (element *Elemento) SeguePlayer(player *Elemento) {
 		} else if element.y > player.y {
 			element.y--
 		}
-		//mutex.Unlock()
 		time.Sleep(time.Second)
 	}
 }
@@ -99,6 +84,25 @@ func atualizaMapa() {
 	mapa.DesenhaMapa()
 }
 
-func interagir() {
-	//
+func interagir(x int, y int) {
+	switch lastMove {
+    case 'w':
+		if mapa.Mapa[y-1][x].interativo {
+			fmt.Println("Interacted and removed")
+		}
+    case 'a':
+		if mapa.Mapa[y][x-1].interativo {
+			fmt.Println("Interacted and removed")
+		}
+    case 's':
+		if mapa.Mapa[y+1][x].interativo {
+			fmt.Println("Interacted and removed")
+		}
+    case 'd':
+		if mapa.Mapa[y][x+1].interativo {
+			fmt.Println("Interacted and removed")
+		}
+	default:
+        return
+    }
 }
