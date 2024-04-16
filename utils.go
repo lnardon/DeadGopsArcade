@@ -35,10 +35,12 @@ func adicionaZumbi(x int, y int) {
 }
 
 func gerarIdUnico() int {
+	mutex.Lock()
     for {
         id := rand.Int()
         if !idsUsados[id] {
             idsUsados[id] = true
+			defer mutex.Unlock()
             return id
         }
     }
@@ -50,7 +52,7 @@ func atirar() {
         simbolo:  '*',
         cor:      termbox.ColorDefault,
         corFundo: termbox.ColorDefault,
-        tangivel: false,
+        tangivel: true,
         interativo: false,
         x:        playerRef.x,
         y:        playerRef.y,
@@ -76,4 +78,27 @@ func atirar() {
 
     mapa.AdicionaElemento(tiro)
     tiro.MoveTiro(tiroX, tiroY, &mapa, lastMove)
+}
+
+func dropar(id int) bool {
+	var elemento = mapa.GetPositionById(id)
+    if chance20() {
+        item := &Elemento{
+            id:       gerarIdUnico(),
+            simbolo:  '♦',
+            cor:      termbox.ColorYellow,
+            corFundo: termbox.ColorDefault,
+            tangivel: true,
+            interativo: true,
+            x:        elemento.x,
+            y:        elemento.y,
+        }
+        mapa.AdicionaElemento(item)
+		return true
+    }
+	return false
+}
+
+func chance20() bool {
+    return rand.Intn(100) <= 100
 }

@@ -48,7 +48,17 @@ func (mapa *Map) DesenhaMapa() {
 }
 
 func (mapa *Map) AdicionaElemento(elemento *Elemento) {
+	mutex.Lock()
+	defer mutex.Unlock()
+	if(elemento.simbolo == '*' && tiroEmExecucao > 5) {
+		return
+	}
+
+	if(elemento.simbolo == '*') {
+		tiroEmExecucao++
+	}
 	mapa.Elementos = append(mapa.Elementos, elemento)
+	
 }
 
 func (mapa *Map) RemoveElemento(id int) {
@@ -64,15 +74,31 @@ func (mapa *Map) RemoveElemento(id int) {
                 x:        elemento.x,
                 y:        elemento.y,
             }
-            mapa.Elementos[index] = vazio
+			mutex.Lock()
+			if(elemento.simbolo == '*' && tiroEmExecucao > 0) {
+				tiroEmExecucao--
+			}
+			mapa.Elementos[index] = vazio
 			mapa.Elementos = append(mapa.Elementos[:index], mapa.Elementos[index+1:]...)
-            return
+            mutex.Unlock()
+			return
         }
     }
 }
 
 func (mapa *Map) GetElemento(x int, y int) *Elemento {
+	mutex.Lock()
+	defer mutex.Unlock()
 	return mapa.Mapa[y][x]
+}
+
+func (mapa *Map) GetPositionById(id int) *Elemento {
+	for _, elemento := range mapa.Elementos {
+		if elemento.id == id {
+			return elemento
+		}
+	}
+	return nil
 }
 
 func carregarMapa(nomeArquivo string) {

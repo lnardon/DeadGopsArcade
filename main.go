@@ -7,6 +7,7 @@ import (
 	"github.com/nsf/termbox-go"
 )
 
+var tiroEmExecucao int = 0
 var mapa Map
 var playerRef *Elemento
 var idsUsados = make(map[int]bool)

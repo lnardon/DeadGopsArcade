@@ -18,10 +18,10 @@ type Elemento struct {
 	y          int
 }
 
-func (element *Elemento) Move(newX int, newY int, mapa *Map) {    
+func (element *Elemento) Move(newX int, newY int, mapa *Map) {
 	elementoAntigo  := mapa.GetElemento(newX, newY)
     if elementoAntigo.tangivel {
-        return
+		return
     }
     elementoAntigo.x = element.x
     elementoAntigo.y = element.y
@@ -34,7 +34,9 @@ func (element *Elemento) Move(newX int, newY int, mapa *Map) {
 func (element *Elemento) MoveTiro(newX int, newY int, mapa *Map, direction rune) {
 	if mapa.GetElemento(newX, newY).simbolo == '☠' {
 		mapa.RemoveElemento(element.id)
-		mapa.RemoveElemento(mapa.GetElemento(newX, newY).id)
+		if dropar(mapa.GetElemento(newX, newY).id) != true {
+			mapa.RemoveElemento(mapa.GetElemento(newX, newY).id)
+		}
 		atualizaMapa()
 		return 
 	}
@@ -47,7 +49,7 @@ func (element *Elemento) MoveTiro(newX int, newY int, mapa *Map, direction rune)
     element.x = newX
     element.y = newY
 	atualizaMapa()
-	time.Sleep(time.Millisecond * 100)
+	time.Sleep(time.Millisecond * 50)
 
     switch direction {
     case 'w':
