@@ -23,7 +23,8 @@ func Mover(comando rune) {
 func adicionaZumbi(x int, y int) {
 	zumbi := &Elemento{
 		id:       gerarIdUnico(),
-		simbolo:  '☠',
+		tipo:    "zombie",
+		simbolo:  '💀',
 		cor:      termbox.ColorDefault,
 		corFundo: termbox.ColorDefault,
 		tangivel: true,
@@ -32,15 +33,17 @@ func adicionaZumbi(x int, y int) {
 		y:        y,
 	}
 	mapa.AdicionaElemento(zumbi)
+	go zumbi.MoverZumbi()
 }
 
 func gerarIdUnico() int {
 	mutex.Lock()
+	defer mutex.Unlock()
+
     for {
         id := rand.Int()
         if !idsUsados[id] {
             idsUsados[id] = true
-			defer mutex.Unlock()
             return id
         }
     }
@@ -49,7 +52,8 @@ func gerarIdUnico() int {
 func atirar() {
     tiro := &Elemento{
         id:       gerarIdUnico(),
-        simbolo:  '*',
+		tipo:    "bullet",
+        simbolo:  '🔹',
         cor:      termbox.ColorDefault,
         corFundo: termbox.ColorDefault,
         tangivel: true,
@@ -80,12 +84,15 @@ func atirar() {
     tiro.MoveTiro(tiroX, tiroY, &mapa, lastMove)
 }
 
-func dropar(id int) bool {
+func DropItem(id int) bool {
 	var elemento = mapa.GetPositionById(id)
-    if chance20() {
+
+    if rand.Float32() > 0.9 { // 10%
+		mapa.RemoveElemento(id)
         item := &Elemento{
             id:       gerarIdUnico(),
-            simbolo:  '♦',
+			tipo:    "item",
+            simbolo:  '💫',
             cor:      termbox.ColorYellow,
             corFundo: termbox.ColorDefault,
             tangivel: true,
@@ -96,9 +103,22 @@ func dropar(id int) bool {
         mapa.AdicionaElemento(item)
 		return true
     }
+	go func (){
+		for {
+			x := rand.Intn(80)
+			y := rand.Intn(30)
+			if mapa.GetElemento(x, y).tipo == "empty" {
+				adicionaZumbi(x, y)
+				return
+			}
+		}
+	}()
 	return false
 }
 
-func chance20() bool {
-    return rand.Intn(100) <= 100
+func isWall(x int, y int) bool {
+	if mapa.GetElemento(x, y).tangivel {
+		return true
+	}
+	return false
 }

@@ -29,7 +29,7 @@ func (mapa *Map) MontaMapa() {
 
 func (mapa *Map) AdicionaIterativa() {
 	for _, elemento := range mapa.Elementos {
-		if elemento.simbolo == '☺' || elemento.simbolo == '☠' || elemento.simbolo == '*' {
+		if elemento.tipo ==  "player" || elemento.tipo == "zombie" || elemento.tipo == "bullet" {
 			mapa.ThreadsInterativas = append(mapa.ThreadsInterativas, elemento)
 		}
 	}
@@ -37,6 +37,8 @@ func (mapa *Map) AdicionaIterativa() {
 
 func (mapa *Map) DesenhaMapa() {
 	mutex.Lock()
+	defer mutex.Unlock()
+
 	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
 	for y, linha := range mapa.Mapa {
 		for x, elem := range linha {
@@ -44,17 +46,17 @@ func (mapa *Map) DesenhaMapa() {
 		}
 	}
 	termbox.Flush()
-	mutex.Unlock()
 }
 
 func (mapa *Map) AdicionaElemento(elemento *Elemento) {
 	mutex.Lock()
 	defer mutex.Unlock()
-	if(elemento.simbolo == '*' && tiroEmExecucao > 5) {
+	
+	if(elemento.tipo == "bullet" && tiroEmExecucao > 5) {
 		return
 	}
 
-	if(elemento.simbolo == '*') {
+	if(elemento.tipo == "bullet") {
 		tiroEmExecucao++
 	}
 	mapa.Elementos = append(mapa.Elementos, elemento)
@@ -66,6 +68,7 @@ func (mapa *Map) RemoveElemento(id int) {
         if elemento.id == id {
             vazio := &Elemento{
                 id:       gerarIdUnico(),
+				tipo : 	  "empty",
                 simbolo:  ' ',
                 cor:      termbox.ColorDefault,
                 corFundo: termbox.ColorDefault,
@@ -75,7 +78,7 @@ func (mapa *Map) RemoveElemento(id int) {
                 y:        elemento.y,
             }
 			mutex.Lock()
-			if(elemento.simbolo == '*' && tiroEmExecucao > 0) {
+			if(elemento.simbolo == '💀' && tiroEmExecucao > 0) {
 				tiroEmExecucao--
 			}
 			mapa.Elementos[index] = vazio
@@ -118,7 +121,8 @@ func carregarMapa(nomeArquivo string) {
 			case '☠':
 				zombie := &Elemento{
 					id: 		gerarIdUnico(),
-					simbolo:    '☠',
+					tipo:    "zombie",
+					simbolo:    '💀',
 					cor:        termbox.ColorDefault,
 					corFundo:   termbox.ColorDefault,
 					tangivel:   true,
@@ -131,7 +135,8 @@ func carregarMapa(nomeArquivo string) {
 			case '▤':
 				parede := &Elemento{
 					id: 		gerarIdUnico(),
-					simbolo:    '▤',
+					tipo:   "wall",
+					simbolo:    '🧱',
 					cor:        termbox.ColorBlack | termbox.AttrBold | termbox.AttrDim,
 					corFundo:   termbox.ColorDarkGray,
 					tangivel:   true,
@@ -144,7 +149,8 @@ func carregarMapa(nomeArquivo string) {
 			case '#':
 				barreira := &Elemento{
 					id: 		gerarIdUnico(),
-					simbolo:    '#',
+					tipo:   "blockage",
+					simbolo:    '🚧',
 					cor:        termbox.ColorRed,
 					corFundo:   termbox.ColorDefault,
 					tangivel:   true,
@@ -157,7 +163,8 @@ func carregarMapa(nomeArquivo string) {
 			case '☺':
 				personagem := &Elemento{
 					id: 		gerarIdUnico(),
-					simbolo:    '☺',
+					tipo:    "player",
+					simbolo:    '😆',
 					cor:        termbox.ColorBlack,
 					corFundo:   termbox.ColorDefault,
 					tangivel:   true,
@@ -171,6 +178,7 @@ func carregarMapa(nomeArquivo string) {
 			case ' ':
 				vazio := &Elemento{
 					id: 		gerarIdUnico(),
+					tipo:   "empty",
 					simbolo:    ' ',
 					cor:        termbox.ColorDefault,
 					corFundo:   termbox.ColorDefault,

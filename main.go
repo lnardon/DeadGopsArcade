@@ -28,11 +28,13 @@ func main() {
 	mapa.DesenhaMapa()
 	for {
 		if currentZombies < maxZombies {
-			adicionaZumbi(
-				rand.Intn(80),
-				rand.Intn(30),
-			)
-			currentZombies++
+			x := rand.Intn(80)
+			y := rand.Intn(30)
+
+			if mapa.GetElemento(x, y).tipo == "empty" {
+				adicionaZumbi(x, y)
+				currentZombies++
+			}
 		}
 
 		switch ev := termbox.PollEvent(); ev.Type {

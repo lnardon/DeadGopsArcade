@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
+	"os"
 	"time"
 
 	"github.com/nsf/termbox-go"
@@ -10,6 +12,7 @@ import (
 type Elemento struct {
 	id         int
 	simbolo    rune
+	tipo	   string
 	cor        termbox.Attribute
 	corFundo   termbox.Attribute
 	tangivel   bool
@@ -32,9 +35,9 @@ func (element *Elemento) Move(newX int, newY int, mapa *Map) {
 }
 
 func (element *Elemento) MoveTiro(newX int, newY int, mapa *Map, direction rune) {
-	if mapa.GetElemento(newX, newY).simbolo == '☠' {
+	if mapa.GetElemento(newX, newY).tipo == "zombie" {
 		mapa.RemoveElemento(element.id)
-		if dropar(mapa.GetElemento(newX, newY).id) != true {
+		if DropItem(mapa.GetElemento(newX, newY).id) != true {
 			mapa.RemoveElemento(mapa.GetElemento(newX, newY).id)
 		}
 		atualizaMapa()
@@ -43,6 +46,9 @@ func (element *Elemento) MoveTiro(newX int, newY int, mapa *Map, direction rune)
 
 	if mapa.GetElemento(newX, newY).tangivel {
 		mapa.RemoveElemento(element.id)
+		mutex.Lock()
+		tiroEmExecucao--
+		mutex.Unlock()
 		atualizaMapa()
 		return
     }
@@ -65,46 +71,71 @@ func (element *Elemento) MoveTiro(newX int, newY int, mapa *Map, direction rune)
     }
 }
 
-func (element *Elemento) SeguePlayer(player *Elemento) {
-	for {
-		if element.x < player.x {
-			element.x++
-		} else if element.x > player.x{
-			element.x--
-		}
-		if element.y < player.y {
-			element.y++
-		} else if element.y > player.y {
-			element.y--
-		}
-		time.Sleep(time.Second)
-	}
-}
-
 func atualizaMapa() {
 	mapa.MontaMapa()
 	mapa.DesenhaMapa()
 }
 
 func interagir(x int, y int) {
+	mutex.Lock()
+	defer mutex.Unlock()
 	switch lastMove {
     case 'w':
 		if mapa.Mapa[y-1][x].interativo {
-			fmt.Println("Interacted and removed")
+			termbox.Close()
+			fmt.Println("Game finished!")
+			os.Exit(1)
 		}
     case 'a':
 		if mapa.Mapa[y][x-1].interativo {
-			fmt.Println("Interacted and removed")
+			termbox.Close()
+			fmt.Println("Game finished!")
+			os.Exit(1)
 		}
     case 's':
 		if mapa.Mapa[y+1][x].interativo {
-			fmt.Println("Interacted and removed")
+			termbox.Close()
+			fmt.Println("Game finished!")
+			os.Exit(1)
 		}
     case 'd':
 		if mapa.Mapa[y][x+1].interativo {
-			fmt.Println("Interacted and removed")
+			termbox.Close()
+			fmt.Println("Game finished!")
+			os.Exit(1)
 		}
 	default:
         return
     }
+}
+
+func (el *Elemento) MoverZumbi() {
+	for {
+		if el.tipo == "zombie" {
+			direction := rune(rand.Intn(4))
+			switch direction {
+			case 0:
+				if !isWall(el.x, el.y-1){
+					el.Move(el.x, el.y-1, &mapa)
+				}
+			case 1:
+				if !isWall(el.x - 1, el.y){
+					el.Move(el.x-1, el.y, &mapa)
+				}
+			
+			case 2:
+				if !isWall(el.x, el.y+1){
+					el.Move(el.x, el.y+1, &mapa)
+				}
+			
+			case 3:
+				if !isWall(el.x+1, el.y){
+					el.Move(el.x+1, el.y, &mapa)
+				}
+			}
+		}
+
+		time.Sleep(time.Millisecond * 250)
+		atualizaMapa()
+	}
 }
