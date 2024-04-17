@@ -1,22 +1,25 @@
 package main
 
 import (
-	"bufio"
-	"os"
+	"fmt"
 	"math/rand"
+	"sync"
+	"time"
 
 	"github.com/nsf/termbox-go"
 )
 
-var mapa Map
-
-var efeitoNeblina = false
-var revelado [][]bool
-var raioVisao int = 3
+var tiroEmExecucao int = 0
+var mapa Map = Map{}
 var playerRef *Elemento
 var idsUsados = make(map[int]bool)
 var lastMove rune
 var tiroX, tiroY int
+var maxZombies = 5
+var currentZombies = 0
+var mutex sync.Mutex
+var killedZombiesMsg string
+var killedZombies int
 
 func main() {
 	err := termbox.Init()
@@ -26,192 +29,70 @@ func main() {
 	defer termbox.Close()
 
 	carregarMapa("map.txt")
-	mapa.DesenhaMapa()
-	adicionaZumbi()
+
+	for _ = range maxZombies{
+		SpawnaZumbi()
+	}
+
+	eventQueue := make(chan termbox.Event)
+	go func() {
+		for {
+			eventQueue <- termbox.PollEvent()
+		}
+	}()
+
+	tick := time.Tick(100* time.Millisecond)
+
 	for {
-		switch ev := termbox.PollEvent(); ev.Type {
-		case termbox.EventKey:
-			if ev.Key == termbox.KeyEsc {
-				return // Sair do programa
+		select {
+		case ev := <-eventQueue:
+			if ev.Type == termbox.EventKey {
+				if ev.Key == termbox.KeyEsc {
+					return // exit
+				}
+				if ev.Ch == 'e' {
+					 interagir(playerRef.x, playerRef.y)
+				} else if ev.Key == termbox.KeySpace {
+					 go atirar()
+				} else {
+					 Mover(ev.Ch)
+				}
 			}
-			if ev.Ch == 'e' {
-				interagir()
-			} else if ev.Key == termbox.KeySpace {
-				go atirar()
-			} else {
-				mover(ev.Ch)
-			}
-			mapa.MontaMapa()
-			mapa.DesenhaMapa()	
+		case <-tick:
+			AtualizaMapa()
 		}
 	}
 }
 
-func interagir() {
-	//
+func SpawnaZumbi() {
+	x := rand.Intn(80)
+	y := rand.Intn(30)
+
+	if mapa.GetElemento(x, y).tipo == "empty"  {
+		adicionaZumbi(x, y)
+		currentZombies++
+		return
+	}
+	SpawnaZumbi()
 }
 
-func gerarIdUnico() int {
-    for {
-        id := rand.Int() // gera um número aleatório
-        if !idsUsados[id] {
-            idsUsados[id] = true
-            return id
-        }
+func desenhaBarraDeStatus() {
+	killedZombiesMsg = fmt.Sprintf("Você matou %d zombies", killedZombies)
+    for i, c := range killedZombiesMsg {
+        termbox.SetCell(i, len(mapa.Mapa)+1, c, termbox.ColorBlack, termbox.ColorDefault)
+    }
+    msg := "Use WASD para mover e E para interagir. ESC para sair."
+    for i, c := range msg {
+        termbox.SetCell(i, len(mapa.Mapa)+5, c, termbox.ColorBlack, termbox.ColorDefault)
+    }
+
+	msg1 := "Ao matar o zumbi você terá 1 segundo para interagir com o item e ganhar o jogo."
+    for i, c := range msg1 {
+        termbox.SetCell(i, len(mapa.Mapa)+2, c, termbox.ColorBlack, termbox.ColorDefault)
+    }
+	msg2 := "Se o zumbi chegar em você, você perde."
+    for i, c := range msg2 {
+        termbox.SetCell(i, len(mapa.Mapa)+3, c, termbox.ColorBlack, termbox.ColorDefault)
     }
 }
 
-func carregarMapa(nomeArquivo string) {
-	arquivo, err := os.Open(nomeArquivo)
-	if err != nil {
-		panic(err)
-	}
-	defer arquivo.Close()
-
-	scanner := bufio.NewScanner(arquivo)
-	y := 0
-	x := 0
-	for scanner.Scan() {
-		linhaTexto := scanner.Text()
-		for _, char := range linhaTexto {
-			switch char {
-			case '☠':
-				zombie := &Elemento{
-					id: 		gerarIdUnico(),
-					simbolo:    '☠',
-					cor:        termbox.ColorDefault,
-					corFundo:   termbox.ColorDefault,
-					tangivel:   true,
-					interativo: false,
-					x:          x,
-					y:          y,
-				}
-				mapa.AdicionaElemento(zombie)
-				break
-			case '▤':
-				parede := &Elemento{
-					id: 		gerarIdUnico(),
-					simbolo:    '▤',
-					cor:        termbox.ColorBlack | termbox.AttrBold | termbox.AttrDim,
-					corFundo:   termbox.ColorDarkGray,
-					tangivel:   true,
-					interativo: false,
-					x:          x,
-					y:          y,
-				}
-				mapa.AdicionaElemento(parede)
-				break
-			case '#':
-				barreira := &Elemento{
-					id: 		gerarIdUnico(),
-					simbolo:    '#',
-					cor:        termbox.ColorRed,
-					corFundo:   termbox.ColorDefault,
-					tangivel:   true,
-					interativo: false,
-					x:          x,
-					y:          y,
-				}
-				mapa.AdicionaElemento(barreira)
-				break
-			case '☺':
-				personagem := &Elemento{
-					id: 		gerarIdUnico(),
-					simbolo:    '☺',
-					cor:        termbox.ColorBlack,
-					corFundo:   termbox.ColorDefault,
-					tangivel:   true,
-					interativo: false,
-					x:          x,
-					y:          y,
-				}
-				playerRef = personagem
-				mapa.AdicionaElemento(personagem)
-				break
-			case ' ':
-				vazio := &Elemento{
-					id: 		gerarIdUnico(),
-					simbolo:    ' ',
-					cor:        termbox.ColorDefault,
-					corFundo:   termbox.ColorDefault,
-					tangivel:   false,
-					interativo: false,
-					x:          x,
-					y:          y,
-				}
-				mapa.AdicionaElemento(vazio)
-				break
-
-			}
-			x++
-		}
-		x = 0
-		y++
-	}
-	mapa.AdicionaIterativa()
-	mapa.MontaMapa()
-	if err := scanner.Err(); err != nil {
-		panic(err)
-	}
-}
-
-func mover(comando rune) {
-	lastMove = comando
-	switch comando {
-	case 'w':
-		playerRef.Move(playerRef.x, playerRef.y-1, &mapa)
-	case 'a':
-		playerRef.Move(playerRef.x-1, playerRef.y, &mapa)
-	case 's':
-		playerRef.Move(playerRef.x, playerRef.y+1, &mapa)
-	case 'd':
-		playerRef.Move(playerRef.x+1, playerRef.y, &mapa)
-	}
-}
-
-// adiciona zumbi para teste, pois se ele já estiver no mapa não da para matar
-func adicionaZumbi() {
-	zumbi := &Elemento{
-		id:       gerarIdUnico(),
-		simbolo:  '☠',
-		cor:      termbox.ColorDefault,
-		corFundo: termbox.ColorDefault,
-		tangivel: true,
-		interativo: false,
-		x:        15,
-		y:        15,
-	}
-	mapa.AdicionaElemento(zumbi)
-}
-
-func atirar() {
-    tiro := &Elemento{
-        id:       gerarIdUnico(),
-        simbolo:  '*',
-        cor:      termbox.ColorDefault,
-        corFundo: termbox.ColorDefault,
-        tangivel: false,
-        interativo: false,
-        x:        playerRef.x,
-        y:        playerRef.y,
-    }
-	switch lastMove {
-	case 'w':
-		tiroY = playerRef.y - 1
-		tiroX = playerRef.x
-	case 'a':
-		tiroY = playerRef.y
-		tiroX = playerRef.x - 1
-	case 's':
-		tiroY = playerRef.y + 1
-		tiroX = playerRef.x
-	case 'd':
-		tiroY = playerRef.y
-		tiroX = playerRef.x + 1
-	default:
-		tiroY = playerRef.y - 1
-		tiroX = playerRef.x
-	}
-    mapa.AdicionaElemento(tiro)
-    tiro.MoveTiro(tiroX, tiroY, &mapa, lastMove)
-}

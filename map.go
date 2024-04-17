@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bufio"
+	"os"
 
 	"github.com/nsf/termbox-go"
 )
@@ -25,34 +27,54 @@ func (mapa *Map) MontaMapa() {
 
 }
 
+func AtualizaMapa(){
+	mapa.MontaMapa()
+	mapa.DesenhaMapa()
+}
+
 func (mapa *Map) AdicionaIterativa() {
 	for _, elemento := range mapa.Elementos {
-		if elemento.simbolo == '☺' || elemento.simbolo == '☠' || elemento.simbolo == '*' {
+		if elemento.tipo ==  "player" || elemento.tipo == "zombie" || elemento.tipo == "bullet" {
 			mapa.ThreadsInterativas = append(mapa.ThreadsInterativas, elemento)
 		}
 	}
 }
 
 func (mapa *Map) DesenhaMapa() {
+	mutex.Lock()
+	defer mutex.Unlock()
+
 	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
 	for y, linha := range mapa.Mapa {
 		for x, elem := range linha {
 			termbox.SetCell(x, y, elem.simbolo, elem.cor, elem.corFundo)
 		}
 	}
+	desenhaBarraDeStatus()
 	termbox.Flush()
 }
 
 func (mapa *Map) AdicionaElemento(elemento *Elemento) {
+	mutex.Lock()
+	defer mutex.Unlock()
+	
+	if(elemento.tipo == "bullet" && tiroEmExecucao > 5) {
+		return
+	}
+
+	if(elemento.tipo == "bullet") {
+		tiroEmExecucao++
+	}
 	mapa.Elementos = append(mapa.Elementos, elemento)
+	
 }
 
 func (mapa *Map) RemoveElemento(id int) {
     for index, elemento := range mapa.Elementos {
         if elemento.id == id {
-			//fmt.Println("Removendo elemento", elemento, "na posição", elemento.x, elemento.y, "do mapa")
             vazio := &Elemento{
                 id:       gerarIdUnico(),
+				tipo : 	  "empty",
                 simbolo:  ' ',
                 cor:      termbox.ColorDefault,
                 corFundo: termbox.ColorDefault,
@@ -61,13 +83,137 @@ func (mapa *Map) RemoveElemento(id int) {
                 x:        elemento.x,
                 y:        elemento.y,
             }
-            mapa.Elementos[index] = vazio
+			mutex.Lock()
+			if(elemento.tangivel && tiroEmExecucao > 0) {
+				tiroEmExecucao--
+			}
+			mapa.Elementos[index] = vazio
 			mapa.Elementos = append(mapa.Elementos[:index], mapa.Elementos[index+1:]...)
-            return
+            mutex.Unlock()
+			return
         }
     }
 }
 
 func (mapa *Map) GetElemento(x int, y int) *Elemento {
+	mutex.Lock()
+	defer mutex.Unlock()
 	return mapa.Mapa[y][x]
+}
+
+func (mapa *Map) GetPositionById(id int) *Elemento {
+	for _, elemento := range mapa.Elementos {
+		if elemento.id == id {
+			return elemento
+		}
+	}
+	return nil
+}
+
+func carregarMapa(nomeArquivo string) {
+	arquivo, err := os.Open(nomeArquivo)
+	if err != nil {
+		panic(err)
+	}
+	defer arquivo.Close()
+
+	scanner := bufio.NewScanner(arquivo)
+	y := 0
+	x := 0
+	for scanner.Scan() {
+		linhaTexto := scanner.Text()
+		for _, char := range linhaTexto {
+			switch char {
+			case '☠':
+				zombie := &Elemento{
+					id: 		gerarIdUnico(),
+					tipo:    "zombie",
+					simbolo:    '💀',
+					cor:        termbox.ColorDefault,
+					corFundo:   termbox.ColorDefault,
+					tangivel:   true,
+					interativo: false,
+					x:          x,
+					y:          y,
+				}
+				mapa.AdicionaElemento(zombie)
+				break
+			case '▤':
+				parede := &Elemento{
+					id: 		gerarIdUnico(),
+					tipo:   "wall",
+					simbolo:    '▤',
+					cor:        termbox.ColorBlack | termbox.AttrBold | termbox.AttrDim,
+					corFundo:   termbox.ColorDarkGray,
+					tangivel:   true,
+					interativo: false,
+					x:          x,
+					y:          y,
+				}
+				mapa.AdicionaElemento(parede)
+				break
+			case '#':
+				barreira := &Elemento{
+					id: 		gerarIdUnico(),
+					tipo:   "blockage",
+					simbolo:    '🚧',
+					cor:        termbox.ColorRed,
+					corFundo:   termbox.ColorDefault,
+					tangivel:   true,
+					interativo: false,
+					x:          x,
+					y:          y,
+				}
+				mapa.AdicionaElemento(barreira)
+				break
+			case '☺':
+				personagem := &Elemento{
+					id: 		gerarIdUnico(),
+					tipo:    "player",
+					simbolo:    '😆',
+					cor:        termbox.ColorBlack,
+					corFundo:   termbox.ColorDefault,
+					tangivel:   true,
+					interativo: false,
+					x:          x,
+					y:          y,
+				}
+				playerRef = personagem
+				mapa.AdicionaElemento(personagem)
+				break
+			case ' ':
+				vazio := &Elemento{
+					id: 		gerarIdUnico(),
+					tipo:   "empty",
+					simbolo:    ' ',
+					cor:        termbox.ColorDefault,
+					corFundo:   termbox.ColorDefault,
+					tangivel:   false,
+					interativo: false,
+					x:          x,
+					y:          y,
+				}
+				mapa.AdicionaElemento(vazio)
+				break
+
+			}
+			x++
+		}
+		x = 0
+		y++
+	}
+	mapa.AdicionaIterativa()
+	mapa.MontaMapa()
+	if err := scanner.Err(); err != nil {
+		panic(err)
+	}
+}
+
+func (mapa *Map) GetAround(elemento *Elemento) []*Elemento{
+	aroundElements := make([]*Elemento, 4)
+	aroundElements[0] = mapa.GetElemento(elemento.x, elemento.y+1)
+	aroundElements[1] = mapa.GetElemento(elemento.x+1, elemento.y)
+	aroundElements[2] = mapa.GetElemento(elemento.x, elemento.y-1)
+	aroundElements[3] = mapa.GetElemento(elemento.x-1, elemento.y)
+	return aroundElements
 }
