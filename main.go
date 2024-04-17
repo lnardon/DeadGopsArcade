@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"math/rand"
 	"sync"
 	"time"
@@ -14,9 +15,11 @@ var playerRef *Elemento
 var idsUsados = make(map[int]bool)
 var lastMove rune
 var tiroX, tiroY int
-var maxZombies = 10
+var maxZombies = 5
 var currentZombies = 0
 var mutex sync.Mutex
+var killedZombiesMsg string
+var killedZombies int
 
 func main() {
 	err := termbox.Init()
@@ -28,15 +31,7 @@ func main() {
 	carregarMapa("map.txt")
 
 	for _ = range maxZombies{
-		if currentZombies < maxZombies {
-			x := rand.Intn(80)
-			y := rand.Intn(30)
-
-			if mapa.GetElemento(x, y).tipo == "empty" || mapa.GetElemento(x, y) == nil {
-				adicionaZumbi(x, y)
-				currentZombies++
-			}
-		}
+		SpawnaZumbi()
 	}
 
 	eventQueue := make(chan termbox.Event)
@@ -46,7 +41,7 @@ func main() {
 		}
 	}()
 
-	tick := time.Tick(100 * time.Millisecond)
+	tick := time.Tick(100* time.Millisecond)
 
 	for {
 		select {
@@ -64,7 +59,40 @@ func main() {
 				}
 			}
 		case <-tick:
-			mapa.DesenhaMapa()
+			AtualizaMapa()
 		}
 	}
 }
+
+func SpawnaZumbi() {
+	x := rand.Intn(80)
+	y := rand.Intn(30)
+
+	if mapa.GetElemento(x, y).tipo == "empty"  {
+		adicionaZumbi(x, y)
+		currentZombies++
+		return
+	}
+	SpawnaZumbi()
+}
+
+func desenhaBarraDeStatus() {
+	killedZombiesMsg = fmt.Sprintf("Você matou %d zombies", killedZombies)
+    for i, c := range killedZombiesMsg {
+        termbox.SetCell(i, len(mapa.Mapa)+1, c, termbox.ColorBlack, termbox.ColorDefault)
+    }
+    msg := "Use WASD para mover e E para interagir. ESC para sair."
+    for i, c := range msg {
+        termbox.SetCell(i, len(mapa.Mapa)+5, c, termbox.ColorBlack, termbox.ColorDefault)
+    }
+
+	msg1 := "Ao matar o zumbi você terá 1 segundo para interagir com o item e ganhar o jogo."
+    for i, c := range msg1 {
+        termbox.SetCell(i, len(mapa.Mapa)+2, c, termbox.ColorBlack, termbox.ColorDefault)
+    }
+	msg2 := "Se o zumbi chegar em você, você perde."
+    for i, c := range msg2 {
+        termbox.SetCell(i, len(mapa.Mapa)+3, c, termbox.ColorBlack, termbox.ColorDefault)
+    }
+}
+

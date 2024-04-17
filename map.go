@@ -27,6 +27,11 @@ func (mapa *Map) MontaMapa() {
 
 }
 
+func AtualizaMapa(){
+	mapa.MontaMapa()
+	mapa.DesenhaMapa()
+}
+
 func (mapa *Map) AdicionaIterativa() {
 	for _, elemento := range mapa.Elementos {
 		if elemento.tipo ==  "player" || elemento.tipo == "zombie" || elemento.tipo == "bullet" {
@@ -45,6 +50,7 @@ func (mapa *Map) DesenhaMapa() {
 			termbox.SetCell(x, y, elem.simbolo, elem.cor, elem.corFundo)
 		}
 	}
+	desenhaBarraDeStatus()
 	termbox.Flush()
 }
 
@@ -78,7 +84,7 @@ func (mapa *Map) RemoveElemento(id int) {
                 y:        elemento.y,
             }
 			mutex.Lock()
-			if(elemento.simbolo == '💀' && tiroEmExecucao > 0) {
+			if(elemento.tangivel && tiroEmExecucao > 0) {
 				tiroEmExecucao--
 			}
 			mapa.Elementos[index] = vazio
@@ -136,7 +142,7 @@ func carregarMapa(nomeArquivo string) {
 				parede := &Elemento{
 					id: 		gerarIdUnico(),
 					tipo:   "wall",
-					simbolo:    '🧱',
+					simbolo:    '▤',
 					cor:        termbox.ColorBlack | termbox.AttrBold | termbox.AttrDim,
 					corFundo:   termbox.ColorDarkGray,
 					tangivel:   true,
@@ -201,4 +207,13 @@ func carregarMapa(nomeArquivo string) {
 	if err := scanner.Err(); err != nil {
 		panic(err)
 	}
+}
+
+func (mapa *Map) GetAround(elemento *Elemento) []*Elemento{
+	aroundElements := make([]*Elemento, 4)
+	aroundElements[0] = mapa.GetElemento(elemento.x, elemento.y+1)
+	aroundElements[1] = mapa.GetElemento(elemento.x+1, elemento.y)
+	aroundElements[2] = mapa.GetElemento(elemento.x, elemento.y-1)
+	aroundElements[3] = mapa.GetElemento(elemento.x-1, elemento.y)
+	return aroundElements
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"math/rand"
+	"time"
 
 	"github.com/nsf/termbox-go"
 )
@@ -87,7 +88,7 @@ func atirar() {
 func DropItem(id int) bool {
 	var elemento = mapa.GetPositionById(id)
 
-    if rand.Float32() > 0.9 { // 10%
+    if true { // 10%
 		mapa.RemoveElemento(id)
         item := &Elemento{
             id:       gerarIdUnico(),
@@ -101,6 +102,10 @@ func DropItem(id int) bool {
             y:        elemento.y,
         }
         mapa.AdicionaElemento(item)
+		go func () {
+			time.Sleep(2 * time.Second)
+			mapa.RemoveElemento(item.id)
+		}()
 		return true
     }
 	go func (){
@@ -117,7 +122,7 @@ func DropItem(id int) bool {
 }
 
 func isWall(x int, y int) bool {
-	if mapa.GetElemento(x, y).tangivel {
+	if mapa.GetElemento(x, y).tipo == "wall" {
 		return true
 	}
 	return false

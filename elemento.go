@@ -23,38 +23,39 @@ type Elemento struct {
 
 func (element *Elemento) Move(newX int, newY int, mapa *Map) {
 	elementoAntigo  := mapa.GetElemento(newX, newY)
+	if(elementoAntigo.tipo == "player" && element.tipo == "zombie" || elementoAntigo.tipo == "zombie" && element.tipo == "player") {
+		termbox.Close()
+		fmt.Println("Game finished! You lose!")
+		os.Exit(1)
+		return
+	}
     if elementoAntigo.tangivel {
 		return
     }
+	
     elementoAntigo.x = element.x
     elementoAntigo.y = element.y
     element.x = newX
 	element.y = newY
-	mapa.AdicionaElemento(elementoAntigo)
-    mapa.RemoveElemento(elementoAntigo.id)
 }
 
 func (element *Elemento) MoveTiro(newX int, newY int, mapa *Map, direction rune) {
 	if mapa.GetElemento(newX, newY).tipo == "zombie" {
+		
+		killedZombies++
 		mapa.RemoveElemento(element.id)
 		if DropItem(mapa.GetElemento(newX, newY).id) != true {
 			mapa.RemoveElemento(mapa.GetElemento(newX, newY).id)
 		}
-		atualizaMapa()
 		return 
 	}
 
 	if mapa.GetElemento(newX, newY).tangivel {
 		mapa.RemoveElemento(element.id)
-		mutex.Lock()
-		tiroEmExecucao--
-		mutex.Unlock()
-		atualizaMapa()
 		return
     }
     element.x = newX
     element.y = newY
-	atualizaMapa()
 	time.Sleep(time.Millisecond * 50)
 
     switch direction {
@@ -71,16 +72,15 @@ func (element *Elemento) MoveTiro(newX int, newY int, mapa *Map, direction rune)
     }
 }
 
-func atualizaMapa() {
-	mapa.MontaMapa()
-	mapa.DesenhaMapa()
-}
-
 func interagir(x int, y int) {
-	if mapa.GetElemento(x, y).interativo {
-		termbox.Close()
-		fmt.Println("Game finished!")
-		os.Exit(1)
+	arounds := mapa.GetAround(mapa.GetElemento(x, y));
+	for _, elementos :=range arounds {
+		if(elementos.interativo) {
+			termbox.Close()
+			fmt.Println("Game finished! You won!")
+			os.Exit(1)
+			return
+		}
 	}
 }
 
@@ -111,6 +111,5 @@ func (el *Elemento) MoverZumbi() {
 		}
 
 		time.Sleep(time.Millisecond * 250)
-		atualizaMapa()
 	}
 }
