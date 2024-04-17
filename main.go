@@ -46,7 +46,7 @@ func main() {
 		}
 	}()
 
-	tick := time.Tick(1000 * time.Millisecond)
+	tick := time.Tick(100 * time.Millisecond)
 
 	for {
 		select {
