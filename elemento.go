@@ -77,36 +77,11 @@ func atualizaMapa() {
 }
 
 func interagir(x int, y int) {
-	mutex.Lock()
-	defer mutex.Unlock()
-	switch lastMove {
-    case 'w':
-		if mapa.Mapa[y-1][x].interativo {
-			termbox.Close()
-			fmt.Println("Game finished!")
-			os.Exit(1)
-		}
-    case 'a':
-		if mapa.Mapa[y][x-1].interativo {
-			termbox.Close()
-			fmt.Println("Game finished!")
-			os.Exit(1)
-		}
-    case 's':
-		if mapa.Mapa[y+1][x].interativo {
-			termbox.Close()
-			fmt.Println("Game finished!")
-			os.Exit(1)
-		}
-    case 'd':
-		if mapa.Mapa[y][x+1].interativo {
-			termbox.Close()
-			fmt.Println("Game finished!")
-			os.Exit(1)
-		}
-	default:
-        return
-    }
+	if mapa.GetElemento(x, y).interativo {
+		termbox.Close()
+		fmt.Println("Game finished!")
+		os.Exit(1)
+	}
 }
 
 func (el *Elemento) MoverZumbi() {
