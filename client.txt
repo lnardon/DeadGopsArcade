@@ -1,40 +1,10 @@
-package main
-
-import (
-	"fmt"
-	"math/rand"
-	"sync"
-	"time"
-
-	"github.com/nsf/termbox-go"
-)
-
-var tiroEmExecucao int = 0
-var mapa Map = Map{}
-var playerRef *Elemento
-var idsUsados = make(map[int]bool)
-var lastMove rune
-var tiroX, tiroY int
-var maxZombies = 5
-var currentZombies = 0
-var mutex sync.Mutex
-var killedZombiesMsg string
-var killedZombies int
-
-func main() {
-	err := termbox.Init()
+err := termbox.Init()
 	if err != nil {
 		panic(err)
 	}
 	defer termbox.Close()
 
-	carregarMapa("map.txt")
-
-	for _ = range maxZombies{
-		SpawnaZumbi()
-	}
-
-	eventQueue := make(chan termbox.Event)
+eventQueue := make(chan termbox.Event)
 	go func() {
 		for {
 			eventQueue <- termbox.PollEvent()
@@ -62,19 +32,9 @@ func main() {
 			AtualizaMapa()
 		}
 	}
-}
 
-func SpawnaZumbi() {
-	x := rand.Intn(80)
-	y := rand.Intn(30)
 
-	if mapa.GetElemento(x, y).tipo == "empty"  {
-		adicionaZumbi(x, y)
-		currentZombies++
-		return
-	}
-	SpawnaZumbi()
-}
+
 
 func desenhaBarraDeStatus() {
 	killedZombiesMsg = fmt.Sprintf("Você matou %d zombies", killedZombies)
@@ -96,3 +56,22 @@ func desenhaBarraDeStatus() {
     }
 }
 
+
+func (mapa *Map) DesenhaMapa() {
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
+	for y, linha := range mapa.Mapa {
+		for x, elem := range linha {
+			termbox.SetCell(x, y, elem.simbolo, elem.cor, elem.corFundo)
+		}
+	}
+	desenhaBarraDeStatus()
+	termbox.Flush()
+}
+
+func AtualizaMapa(){
+	mapa.MontaMapa()
+	mapa.DesenhaMapa()
+}

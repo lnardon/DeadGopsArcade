@@ -2,10 +2,24 @@ package main
 
 import (
 	"bufio"
+	"math/rand"
 	"os"
+	"sync"
 
 	"github.com/nsf/termbox-go"
 )
+
+var tiroEmExecucao int = 0
+var mapa Map = Map{}
+var playerRef *Elemento
+var idsUsados = make(map[int]bool)
+var lastMove rune
+var tiroX, tiroY int
+var maxZombies = 5
+var currentZombies = 0
+var mutex sync.Mutex
+var killedZombiesMsg string
+var killedZombies int
 
 type Map struct {
 	Elementos          []*Elemento
@@ -27,72 +41,53 @@ func (mapa *Map) MontaMapa() {
 
 }
 
-func AtualizaMapa(){
-	mapa.MontaMapa()
-	mapa.DesenhaMapa()
-}
-
 func (mapa *Map) AdicionaIterativa() {
 	for _, elemento := range mapa.Elementos {
-		if elemento.tipo ==  "player" || elemento.tipo == "zombie" || elemento.tipo == "bullet" {
+		if elemento.tipo == "player" || elemento.tipo == "zombie" || elemento.tipo == "bullet" {
 			mapa.ThreadsInterativas = append(mapa.ThreadsInterativas, elemento)
 		}
 	}
 }
 
-func (mapa *Map) DesenhaMapa() {
-	mutex.Lock()
-	defer mutex.Unlock()
-
-	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
-	for y, linha := range mapa.Mapa {
-		for x, elem := range linha {
-			termbox.SetCell(x, y, elem.simbolo, elem.cor, elem.corFundo)
-		}
-	}
-	desenhaBarraDeStatus()
-	termbox.Flush()
-}
-
 func (mapa *Map) AdicionaElemento(elemento *Elemento) {
 	mutex.Lock()
 	defer mutex.Unlock()
-	
-	if(elemento.tipo == "bullet" && tiroEmExecucao > 5) {
+
+	if elemento.tipo == "bullet" && tiroEmExecucao > 5 {
 		return
 	}
 
-	if(elemento.tipo == "bullet") {
+	if elemento.tipo == "bullet" {
 		tiroEmExecucao++
 	}
 	mapa.Elementos = append(mapa.Elementos, elemento)
-	
+
 }
 
 func (mapa *Map) RemoveElemento(id int) {
-    for index, elemento := range mapa.Elementos {
-        if elemento.id == id {
-            vazio := &Elemento{
-                id:       gerarIdUnico(),
-				tipo : 	  "empty",
-                simbolo:  ' ',
-                cor:      termbox.ColorDefault,
-                corFundo: termbox.ColorDefault,
-                tangivel: false,
+	for index, elemento := range mapa.Elementos {
+		if elemento.id == id {
+			vazio := &Elemento{
+				id:         gerarIdUnico(),
+				tipo:       "empty",
+				simbolo:    ' ',
+				cor:        termbox.ColorDefault,
+				corFundo:   termbox.ColorDefault,
+				tangivel:   false,
 				interativo: false,
-                x:        elemento.x,
-                y:        elemento.y,
-            }
+				x:          elemento.x,
+				y:          elemento.y,
+			}
 			mutex.Lock()
-			if(elemento.tangivel && tiroEmExecucao > 0) {
+			if elemento.tangivel && tiroEmExecucao > 0 {
 				tiroEmExecucao--
 			}
 			mapa.Elementos[index] = vazio
 			mapa.Elementos = append(mapa.Elementos[:index], mapa.Elementos[index+1:]...)
-            mutex.Unlock()
+			mutex.Unlock()
 			return
-        }
-    }
+		}
+	}
 }
 
 func (mapa *Map) GetElemento(x int, y int) *Elemento {
@@ -126,8 +121,8 @@ func carregarMapa(nomeArquivo string) {
 			switch char {
 			case '☠':
 				zombie := &Elemento{
-					id: 		gerarIdUnico(),
-					tipo:    "zombie",
+					id:         gerarIdUnico(),
+					tipo:       "zombie",
 					simbolo:    '💀',
 					cor:        termbox.ColorDefault,
 					corFundo:   termbox.ColorDefault,
@@ -140,8 +135,8 @@ func carregarMapa(nomeArquivo string) {
 				break
 			case '▤':
 				parede := &Elemento{
-					id: 		gerarIdUnico(),
-					tipo:   "wall",
+					id:         gerarIdUnico(),
+					tipo:       "wall",
 					simbolo:    '▤',
 					cor:        termbox.ColorBlack | termbox.AttrBold | termbox.AttrDim,
 					corFundo:   termbox.ColorDarkGray,
@@ -154,8 +149,8 @@ func carregarMapa(nomeArquivo string) {
 				break
 			case '#':
 				barreira := &Elemento{
-					id: 		gerarIdUnico(),
-					tipo:   "blockage",
+					id:         gerarIdUnico(),
+					tipo:       "blockage",
 					simbolo:    '🚧',
 					cor:        termbox.ColorRed,
 					corFundo:   termbox.ColorDefault,
@@ -168,8 +163,8 @@ func carregarMapa(nomeArquivo string) {
 				break
 			case '☺':
 				personagem := &Elemento{
-					id: 		gerarIdUnico(),
-					tipo:    "player",
+					id:         gerarIdUnico(),
+					tipo:       "player",
 					simbolo:    '😆',
 					cor:        termbox.ColorBlack,
 					corFundo:   termbox.ColorDefault,
@@ -183,8 +178,8 @@ func carregarMapa(nomeArquivo string) {
 				break
 			case ' ':
 				vazio := &Elemento{
-					id: 		gerarIdUnico(),
-					tipo:   "empty",
+					id:         gerarIdUnico(),
+					tipo:       "empty",
 					simbolo:    ' ',
 					cor:        termbox.ColorDefault,
 					corFundo:   termbox.ColorDefault,
@@ -209,11 +204,23 @@ func carregarMapa(nomeArquivo string) {
 	}
 }
 
-func (mapa *Map) GetAround(elemento *Elemento) []*Elemento{
+func (mapa *Map) GetAround(elemento *Elemento) []*Elemento {
 	aroundElements := make([]*Elemento, 4)
 	aroundElements[0] = mapa.GetElemento(elemento.x, elemento.y+1)
 	aroundElements[1] = mapa.GetElemento(elemento.x+1, elemento.y)
 	aroundElements[2] = mapa.GetElemento(elemento.x, elemento.y-1)
 	aroundElements[3] = mapa.GetElemento(elemento.x-1, elemento.y)
 	return aroundElements
+}
+
+func SpawnaZumbi() {
+	x := rand.Intn(80)
+	y := rand.Intn(30)
+
+	if mapa.GetElemento(x, y).tipo == "empty" {
+		adicionaZumbi(x, y)
+		currentZombies++
+		return
+	}
+	SpawnaZumbi()
 }

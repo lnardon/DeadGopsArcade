@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"math/rand"
 	"net"
 	"net/rpc"
 	"strconv"
@@ -9,7 +11,7 @@ import (
 
 type GameState struct {
 	Players map[string]*ClientState
-	Map     [][]*Elemento
+	Map     Map
 }
 
 func (gs *GameState) toString() string {
@@ -41,6 +43,9 @@ func (gs *GameServer) RegisterClient(args *RegisterArgs, reply *RegisterReply) e
 	defer gs.mutex.Unlock()
 	if _, exists := gs.clients[args.ClientID]; !exists {
 		gs.clients[args.ClientID] = &ClientState{}
+		position := gs.SpawnClient()
+		gs.clients[args.ClientID].PositionX = position[0]
+		gs.clients[args.ClientID].PositionY = position[1]
 		reply.Success = true
 	} else {
 		reply.Success = false
@@ -48,8 +53,22 @@ func (gs *GameServer) RegisterClient(args *RegisterArgs, reply *RegisterReply) e
 	return nil
 }
 
+func (gs *GameServer) SpawnClient() [2]int {
+	x := rand.Intn(80)
+	y := rand.Intn(30)
+
+	if gs.state.Map.GetElemento(x, y).tipo == "empty" {
+		adicionaPlayer(x, y)
+		return [2]int{x, y}
+	}
+	gs.SpawnClient()
+}
+
 func (gs *GameServer) SendCommand(args *CommandArgs, reply *CommandReply) error {
-	// TODO
+	if(args.SequenceNumber == gs.clients[args.ClientID].LastSequenceNum) {
+		reply.Result = "command already processed"
+		return nil
+	}
 	return nil
 }
 
@@ -60,8 +79,14 @@ func (gs *GameServer) GetGameState(args *GameStateArgs, reply *GameStateReply) e
 	return nil
 }
 
-func start() {
+func main() {
+	carregarMapa("map.txt")
+	//for _ = range maxZombies {
+	//	SpawnaZumbi()
+	//}
+
 	gameServer := NewGameServer()
+	gameServer.state.Map = mapa
 	rpc.Register(gameServer)
 	listener, err := net.Listen("tcp", ":3696")
 	if err != nil {
@@ -70,6 +95,7 @@ func start() {
 	defer listener.Close()
 
 	for {
+		fmt.Println("Servidor aguardando conexões na porta", "3696")
 		conn, err := listener.Accept()
 		if err != nil {
 			continue

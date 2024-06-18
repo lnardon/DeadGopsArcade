@@ -7,7 +7,7 @@ go.mod:
 	go get -u github.com/nsf/termbox-go
 
 build: go.mod
-	go build main.go map.go elemento.go utils.go
+	go build server.go map.go elemento.go utils.go interfaces.go client.go
 	
 clean:
 	rm -f jogo

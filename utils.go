@@ -37,6 +37,21 @@ func adicionaZumbi(x int, y int) {
 	go zumbi.MoverZumbi()
 }
 
+func adicionaPlayer(x int, y int) {
+	player := &Elemento{
+		id:       gerarIdUnico(),
+		tipo:    "player",
+		simbolo:  '😆',
+		cor:      termbox.ColorDefault,
+		corFundo: termbox.ColorDefault,
+		tangivel: true,
+		interativo: false,
+		x:        x,
+		y:        y,
+	}
+	mapa.AdicionaElemento(player)
+}
+
 func gerarIdUnico() int {
 	mutex.Lock()
 	defer mutex.Unlock()
