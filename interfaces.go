@@ -32,4 +32,3 @@ type GameServerInterface interface {
 	GetGameState(args *GameStateArgs, reply *GameStateReply) error
 }
 
-var _ GameServerInterface = &GameServer{}

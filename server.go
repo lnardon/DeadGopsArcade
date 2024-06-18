@@ -62,6 +62,7 @@ func (gs *GameServer) SpawnClient() [2]int {
 		return [2]int{x, y}
 	}
 	gs.SpawnClient()
+	return [2]int{0, 0}
 }
 
 func (gs *GameServer) SendCommand(args *CommandArgs, reply *CommandReply) error {
@@ -77,6 +78,13 @@ func (gs *GameServer) GetGameState(args *GameStateArgs, reply *GameStateReply) e
 	defer gs.mutex.Unlock()
 	reply.State = []string{gs.state.toString()}
 	return nil
+}
+
+// Nao sei se ta certo esse metodo
+func (gs *GameServer) ShowMap() Map {
+	gs.mutex.Lock()
+	defer gs.mutex.Unlock()
+	return gs.state.Map
 }
 
 func main() {
@@ -95,7 +103,7 @@ func main() {
 	defer listener.Close()
 
 	for {
-		fmt.Println("Servidor aguardando conexões na porta", "3696")
+		fmt.Println("Server is waiting to connect in port:", "3696")
 		conn, err := listener.Accept()
 		if err != nil {
 			continue

@@ -1,52 +1,104 @@
 package main
 
 import (
+	"fmt"
 	"net/rpc"
 	"strings"
-)
 
-type ClientState struct {
-	ID 				int
-	PositionX       int
-	PositionY       int
-	Health          int // Maybe?
-	LastSequenceNum int
-}
+	"github.com/nsf/termbox-go"
+)
 
 type GameClient struct {
 	server *rpc.Client
+	clientID string
 }
 
-func NewGameClient(serverAddress string) (*GameClient, error) {
+func NewGameClient(serverAddress string, clientID string) (*GameClient, error) {
 	client, err := rpc.Dial("tcp", serverAddress)
 	if err != nil {
 		return nil, err
 	}
-	return &GameClient{server: client}, nil
+	return &GameClient{
+		server: client,
+		clientID: clientID,
+	}, nil
 }
 
-func (gc *GameClient) Register(clientID string) bool {
-	args := &RegisterArgs{ClientID: clientID}
+func (gc *GameClient) Register() (bool, error) {
+	args := &RegisterArgs{
+		ClientID: gc.clientID,
+	}
 	reply := &RegisterReply{}
 	err := gc.server.Call("GameServer.RegisterClient", args, reply)
-	return err == nil && reply.Success
-}
-
-func (gc *GameClient) SendCommand(command string, sequenceNumber int) string {
-	args := &CommandArgs{
-		ClientID:       "", // TODO
-		Command:        command,
-		SequenceNumber: sequenceNumber,
+	if err != nil {
+		return false, err
 	}
-	reply := &CommandReply{}
-	gc.server.Call("GameServer.SendCommand", args, reply)
-	return reply.Result
+	return reply.Success, nil
 }
 
-func (gc *GameClient) GetGameState() string {
-	args := &GameStateArgs{ClientID: "exampleClientID"} // TODO
-	reply := &GameStateReply{}
-	gc.server.Call("GameServer.GetGameState", args, reply)
-	return strings.Join(reply.State, ", ")
+func (gc *GameClient) SendCommand(command string, sequenceNumber int) (string, error) {
+    args := &CommandArgs{
+        ClientID:       gc.clientID,
+        Command:        command,
+        SequenceNumber: sequenceNumber,
+    }
+    reply := &CommandReply{}
+    err := gc.server.Call("GameServer.SendCommand", args, reply)
+    if err != nil {
+        return "", err
+    }
+    return reply.Result, nil
+}
+
+func (gc *GameClient) GetGameState() (string, error) {
+    args := &GameStateArgs{
+        ClientID: gc.clientID,
+    }
+    reply := &GameStateReply{}
+    err := gc.server.Call("GameServer.GetGameState", args, reply)
+    if err != nil {
+        return "", err
+    }
+    return strings.Join(reply.State, ", "), nil
+}
+
+func (gc *GameClient) GetMap() (Map, error) {
+    var mapa Map
+    err := gc.server.Call("GameServer.ShowMap", &struct{}{}, &mapa)
+    if err != nil {
+        fmt.Println("Error to get map:", err)
+        return Map{}, err 
+    }
+    return mapa, nil
+}
+
+func main() {
+	serverAddress := "localhost:3696"
+	clientID := "exampleClientID"
+
+	gameClient, err := NewGameClient(serverAddress, clientID)
+    if err != nil {
+        fmt.Println("Error to connect in port", err)
+        return
+    }
+
+	success, err := gameClient.Register()
+	if err != nil {
+		fmt.Println("Error to register client", err)
+		return
+	}
+	fmt.Println("Client registered successfully:", success)
+
+	err = termbox.Init()
+	if err != nil {
+		panic(err)
+	}
+	defer termbox.Close()
+
+	for {
+
+	}
+
+	
 }
 
