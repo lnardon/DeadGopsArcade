@@ -80,11 +80,11 @@ func (gs *GameServer) GetGameState(args *GameStateArgs, reply *GameStateReply) e
 	return nil
 }
 
-// Nao sei se ta certo esse metodo
-func (gs *GameServer) ShowMap() Map {
-	gs.mutex.Lock()
-	defer gs.mutex.Unlock()
-	return gs.state.Map
+func (gs *GameServer) ShowMap(args *ShowMapArgs, reply *ShowMapReply) error {
+    gs.mutex.Lock()
+    defer gs.mutex.Unlock()
+    reply.Map = gs.state.Map
+    return nil
 }
 
 func main() {

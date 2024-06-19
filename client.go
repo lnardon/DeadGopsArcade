@@ -63,14 +63,29 @@ func (gc *GameClient) GetGameState() (string, error) {
 }
 
 func (gc *GameClient) GetMap() (Map, error) {
-    var mapa Map
-    err := gc.server.Call("GameServer.ShowMap", &struct{}{}, &mapa)
+    args := &ShowMapArgs{}
+    reply := &ShowMapReply{}
+    err := gc.server.Call("GameServer.ShowMap", args, reply)
     if err != nil {
         fmt.Println("Error to get map:", err)
         return Map{}, err 
     }
-    return mapa, nil
+    return reply.Map, nil
 }
+
+func PrintMap(mapa Map) {
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
+	for y, linha := range mapa.Mapa {
+		for x, elem := range linha {
+			termbox.SetCell(x, y, elem.simbolo, elem.cor, elem.corFundo)
+		}
+	}
+	termbox.Flush()
+}
+
 
 func main() {
 	serverAddress := "localhost:3696"
@@ -95,10 +110,11 @@ func main() {
 	}
 	defer termbox.Close()
 
-	for {
-
+	mapa, err := gameClient.GetMap()
+	if err != nil {
+		fmt.Println("Error to get map:", err)
+		return
 	}
-
-	
+	PrintMap(mapa)
 }
 

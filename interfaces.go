@@ -26,6 +26,12 @@ type GameStateReply struct {
 	State []string // TODO
 }
 
+type ShowMapArgs struct{}
+
+type ShowMapReply struct {
+    Map Map
+}
+
 type GameServerInterface interface {
 	RegisterClient(args *RegisterArgs, reply *RegisterReply) error
 	SendCommand(args *CommandArgs, reply *CommandReply) error
