@@ -15,3 +15,9 @@ clean:
 
 distclean: clean
 	rm -f go.mod go.sum
+
+build_client:
+	go build ./client/*.go
+
+build_server:
+	go build ./server/*.go

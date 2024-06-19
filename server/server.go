@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"fmt"
@@ -9,24 +9,12 @@ import (
 	"sync"
 )
 
-type GameState struct {
-	Players map[string]*ClientState
-	Map     Map
-}
-
 func (gs *GameState) toString() string {
 	var state string
 	for id, player := range gs.Players {
 		state += id + " - Pos: (" + strconv.Itoa(player.PositionX) + ", " + strconv.Itoa(player.PositionY) + "), Health: " + strconv.Itoa(player.Health) + "\n"
 	}
 	return state
-}
-
-type GameServer struct {
-	clients  map[string]*ClientState
-	commands chan CommandArgs
-	state    GameState
-	mutex    sync.Mutex
 }
 
 func NewGameServer() *GameServer {

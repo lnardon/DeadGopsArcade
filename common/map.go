@@ -1,4 +1,4 @@
-package main
+package common
 
 import (
 	"bufio"
@@ -20,12 +20,6 @@ var currentZombies = 0
 var mutex sync.Mutex
 var killedZombiesMsg string
 var killedZombies int
-
-type Map struct {
-	Elementos          []*Elemento
-	Mapa               [][]*Elemento
-	ThreadsInterativas []*Elemento
-}
 
 func (mapa *Map) MontaMapa() {
 	if mapa.Mapa == nil {
