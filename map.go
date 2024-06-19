@@ -36,14 +36,14 @@ func (mapa *Map) MontaMapa() {
 	}
 
 	for _, elemento := range mapa.Elementos {
-		mapa.Mapa[elemento.y][elemento.x] = elemento
+		mapa.Mapa[elemento.Y][elemento.X] = elemento
 	}
 
 }
 
 func (mapa *Map) AdicionaIterativa() {
 	for _, elemento := range mapa.Elementos {
-		if elemento.tipo == "player" || elemento.tipo == "zombie" || elemento.tipo == "bullet" {
+		if elemento.Tipo == "player" || elemento.Tipo == "zombie" || elemento.Tipo == "bullet" {
 			mapa.ThreadsInterativas = append(mapa.ThreadsInterativas, elemento)
 		}
 	}
@@ -53,11 +53,11 @@ func (mapa *Map) AdicionaElemento(elemento *Elemento) {
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	if elemento.tipo == "bullet" && tiroEmExecucao > 5 {
+	if elemento.Tipo == "bullet" && tiroEmExecucao > 5 {
 		return
 	}
 
-	if elemento.tipo == "bullet" {
+	if elemento.Tipo == "bullet" {
 		tiroEmExecucao++
 	}
 	mapa.Elementos = append(mapa.Elementos, elemento)
@@ -66,20 +66,20 @@ func (mapa *Map) AdicionaElemento(elemento *Elemento) {
 
 func (mapa *Map) RemoveElemento(id int) {
 	for index, elemento := range mapa.Elementos {
-		if elemento.id == id {
+		if elemento.Id == id {
 			vazio := &Elemento{
-				id:         gerarIdUnico(),
-				tipo:       "empty",
-				simbolo:    ' ',
-				cor:        termbox.ColorDefault,
-				corFundo:   termbox.ColorDefault,
-				tangivel:   false,
-				interativo: false,
-				x:          elemento.x,
-				y:          elemento.y,
+				Id:         gerarIdUnico(),
+				Tipo:       "empty",
+				Simbolo:    ' ',
+				Cor:        termbox.ColorDefault,
+				CorFundo:   termbox.ColorDefault,
+				Tangivel:   false,
+				Interativo: false,
+				X:          elemento.X,
+				Y:          elemento.Y,
 			}
 			mutex.Lock()
-			if elemento.tangivel && tiroEmExecucao > 0 {
+			if elemento.Tangivel && tiroEmExecucao > 0 {
 				tiroEmExecucao--
 			}
 			mapa.Elementos[index] = vazio
@@ -98,7 +98,7 @@ func (mapa *Map) GetElemento(x int, y int) *Elemento {
 
 func (mapa *Map) GetPositionById(id int) *Elemento {
 	for _, elemento := range mapa.Elementos {
-		if elemento.id == id {
+		if elemento.Id == id {
 			return elemento
 		}
 	}
@@ -121,72 +121,72 @@ func carregarMapa(nomeArquivo string) {
 			switch char {
 			case '☠':
 				zombie := &Elemento{
-					id:         gerarIdUnico(),
-					tipo:       "zombie",
-					simbolo:    '💀',
-					cor:        termbox.ColorDefault,
-					corFundo:   termbox.ColorDefault,
-					tangivel:   true,
-					interativo: false,
-					x:          x,
-					y:          y,
+					Id:         gerarIdUnico(),
+					Tipo:       "zombie",
+					Simbolo:    '💀',
+					Cor:        termbox.ColorDefault,
+					CorFundo:   termbox.ColorDefault,
+					Tangivel:   true,
+					Interativo: false,
+					X:          x,
+					Y:          y,
 				}
 				mapa.AdicionaElemento(zombie)
 				break
 			case '▤':
 				parede := &Elemento{
-					id:         gerarIdUnico(),
-					tipo:       "wall",
-					simbolo:    '▤',
-					cor:        termbox.ColorBlack | termbox.AttrBold | termbox.AttrDim,
-					corFundo:   termbox.ColorDarkGray,
-					tangivel:   true,
-					interativo: false,
-					x:          x,
-					y:          y,
+					Id:         gerarIdUnico(),
+					Tipo:       "wall",
+					Simbolo:    '▤',
+					Cor:        termbox.ColorBlack | termbox.AttrBold | termbox.AttrDim,
+					CorFundo:   termbox.ColorDarkGray,
+					Tangivel:   true,
+					Interativo: false,
+					X:          x,
+					Y:          y,
 				}
 				mapa.AdicionaElemento(parede)
 				break
 			case '#':
 				barreira := &Elemento{
-					id:         gerarIdUnico(),
-					tipo:       "blockage",
-					simbolo:    '🚧',
-					cor:        termbox.ColorRed,
-					corFundo:   termbox.ColorDefault,
-					tangivel:   true,
-					interativo: false,
-					x:          x,
-					y:          y,
+					Id:         gerarIdUnico(),
+					Tipo:       "blockage",
+					Simbolo:    '🚧',
+					Cor:        termbox.ColorRed,
+					CorFundo:   termbox.ColorDefault,
+					Tangivel:   true,
+					Interativo: false,
+					X:          x,
+					Y:          y,
 				}
 				mapa.AdicionaElemento(barreira)
 				break
 			case '☺':
 				personagem := &Elemento{
-					id:         gerarIdUnico(),
-					tipo:       "player",
-					simbolo:    '😆',
-					cor:        termbox.ColorBlack,
-					corFundo:   termbox.ColorDefault,
-					tangivel:   true,
-					interativo: false,
-					x:          x,
-					y:          y,
+					Id:         gerarIdUnico(),
+					Tipo:       "player",
+					Simbolo:    '😆',
+					Cor:        termbox.ColorBlack,
+					CorFundo:   termbox.ColorDefault,
+					Tangivel:   true,
+					Interativo: false,
+					X:          x,
+					Y:          y,
 				}
 				playerRef = personagem
 				mapa.AdicionaElemento(personagem)
 				break
 			case ' ':
 				vazio := &Elemento{
-					id:         gerarIdUnico(),
-					tipo:       "empty",
-					simbolo:    ' ',
-					cor:        termbox.ColorDefault,
-					corFundo:   termbox.ColorDefault,
-					tangivel:   false,
-					interativo: false,
-					x:          x,
-					y:          y,
+					Id:         gerarIdUnico(),
+					Tipo:       "empty",
+					Simbolo:    ' ',
+					Cor:        termbox.ColorDefault,
+					CorFundo:   termbox.ColorDefault,
+					Tangivel:   false,
+					Interativo: false,
+					X:          x,
+					Y:          y,
 				}
 				mapa.AdicionaElemento(vazio)
 				break
@@ -206,10 +206,10 @@ func carregarMapa(nomeArquivo string) {
 
 func (mapa *Map) GetAround(elemento *Elemento) []*Elemento {
 	aroundElements := make([]*Elemento, 4)
-	aroundElements[0] = mapa.GetElemento(elemento.x, elemento.y+1)
-	aroundElements[1] = mapa.GetElemento(elemento.x+1, elemento.y)
-	aroundElements[2] = mapa.GetElemento(elemento.x, elemento.y-1)
-	aroundElements[3] = mapa.GetElemento(elemento.x-1, elemento.y)
+	aroundElements[0] = mapa.GetElemento(elemento.X, elemento.Y+1)
+	aroundElements[1] = mapa.GetElemento(elemento.X+1, elemento.Y)
+	aroundElements[2] = mapa.GetElemento(elemento.X, elemento.Y-1)
+	aroundElements[3] = mapa.GetElemento(elemento.X-1, elemento.Y)
 	return aroundElements
 }
 
@@ -217,7 +217,7 @@ func SpawnaZumbi() {
 	x := rand.Intn(80)
 	y := rand.Intn(30)
 
-	if mapa.GetElemento(x, y).tipo == "empty" {
+	if mapa.GetElemento(x, y).Tipo == "empty" {
 		adicionaZumbi(x, y)
 		currentZombies++
 		return

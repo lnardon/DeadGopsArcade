@@ -11,27 +11,27 @@ func Mover(comando rune) {
 	lastMove = comando
 	switch comando {
 	case 'w':
-		playerRef.Move(playerRef.x, playerRef.y-1, &mapa)
+		playerRef.Move(playerRef.X, playerRef.Y-1, &mapa)
 	case 'a':
-		playerRef.Move(playerRef.x-1, playerRef.y, &mapa)
+		playerRef.Move(playerRef.X-1, playerRef.Y, &mapa)
 	case 's':
-		playerRef.Move(playerRef.x, playerRef.y+1, &mapa)
+		playerRef.Move(playerRef.X, playerRef.Y+1, &mapa)
 	case 'd':
-		playerRef.Move(playerRef.x+1, playerRef.y, &mapa)
+		playerRef.Move(playerRef.X+1, playerRef.Y, &mapa)
 	}
 }
 
 func adicionaZumbi(x int, y int) {
 	zumbi := &Elemento{
-		id:       gerarIdUnico(),
-		tipo:    "zombie",
-		simbolo:  '💀',
-		cor:      termbox.ColorDefault,
-		corFundo: termbox.ColorDefault,
-		tangivel: true,
-		interativo: false,
-		x:        x,
-		y:        y,
+		Id:         gerarIdUnico(),
+		Tipo:       "zombie",
+		Simbolo:    '💀',
+		Cor:        termbox.ColorDefault,
+		CorFundo:   termbox.ColorDefault,
+		Tangivel:   true,
+		Interativo: false,
+		X:          x,
+		Y:          y,
 	}
 	mapa.AdicionaElemento(zumbi)
 	go zumbi.MoverZumbi()
@@ -39,15 +39,15 @@ func adicionaZumbi(x int, y int) {
 
 func adicionaPlayer(x int, y int) {
 	player := &Elemento{
-		id:       gerarIdUnico(),
-		tipo:    "player",
-		simbolo:  '😆',
-		cor:      termbox.ColorDefault,
-		corFundo: termbox.ColorDefault,
-		tangivel: true,
-		interativo: false,
-		x:        x,
-		y:        y,
+		Id:         gerarIdUnico(),
+		Tipo:       "player",
+		Simbolo:    '😆',
+		Cor:        termbox.ColorDefault,
+		CorFundo:   termbox.ColorDefault,
+		Tangivel:   true,
+		Interativo: false,
+		X:          x,
+		Y:          y,
 	}
 	mapa.AdicionaElemento(player)
 }
@@ -56,78 +56,78 @@ func gerarIdUnico() int {
 	mutex.Lock()
 	defer mutex.Unlock()
 
-    for {
-        id := rand.Int()
-        if !idsUsados[id] {
-            idsUsados[id] = true
-            return id
-        }
-    }
+	for {
+		id := rand.Int()
+		if !idsUsados[id] {
+			idsUsados[id] = true
+			return id
+		}
+	}
 }
 
 func atirar() {
-    tiro := &Elemento{
-        id:       gerarIdUnico(),
-		tipo:    "bullet",
-        simbolo:  '🔹',
-        cor:      termbox.ColorDefault,
-        corFundo: termbox.ColorDefault,
-        tangivel: true,
-        interativo: false,
-        x:        playerRef.x,
-        y:        playerRef.y,
-    }
+	tiro := &Elemento{
+		Id:         gerarIdUnico(),
+		Tipo:       "bullet",
+		Simbolo:    '🔹',
+		Cor:        termbox.ColorDefault,
+		CorFundo:   termbox.ColorDefault,
+		Tangivel:   true,
+		Interativo: false,
+		X:          playerRef.X,
+		Y:          playerRef.Y,
+	}
 
 	switch lastMove {
 	case 'w':
-		tiroY = playerRef.y - 1
-		tiroX = playerRef.x
+		tiroY = playerRef.Y - 1
+		tiroX = playerRef.X
 	case 'a':
-		tiroY = playerRef.y
-		tiroX = playerRef.x - 1
+		tiroY = playerRef.Y
+		tiroX = playerRef.X - 1
 	case 's':
-		tiroY = playerRef.y + 1
-		tiroX = playerRef.x
+		tiroY = playerRef.Y + 1
+		tiroX = playerRef.X
 	case 'd':
-		tiroY = playerRef.y
-		tiroX = playerRef.x + 1
+		tiroY = playerRef.Y
+		tiroX = playerRef.X + 1
 	default:
-		tiroY = playerRef.y - 1
-		tiroX = playerRef.x
+		tiroY = playerRef.Y - 1
+		tiroX = playerRef.X
 	}
 
-    mapa.AdicionaElemento(tiro)
-    tiro.MoveTiro(tiroX, tiroY, &mapa, lastMove)
+	mapa.AdicionaElemento(tiro)
+	tiro.MoveTiro(tiroX, tiroY, &mapa, lastMove)
 }
 
 func DropItem(id int) bool {
 	var elemento = mapa.GetPositionById(id)
 
-    if true { // 10%
+	if true { // 10%
 		mapa.RemoveElemento(id)
-        item := &Elemento{
-            id:       gerarIdUnico(),
-			tipo:    "item",
-            simbolo:  '💫',
-            cor:      termbox.ColorYellow,
-            corFundo: termbox.ColorDefault,
-            tangivel: true,
-            interativo: true,
-            x:        elemento.x,
-            y:        elemento.y,
-        }
-        mapa.AdicionaElemento(item)
-		go func () {
+		item := &Elemento{
+			Id:         gerarIdUnico(),
+			Tipo:       "item",
+			Simbolo:    '💫',
+			Cor:        termbox.ColorYellow,
+			CorFundo:   termbox.ColorDefault,
+			Tangivel:   true,
+			Interativo: true,
+			X:          elemento.X,
+			Y:          elemento.Y,
+		}
+		mapa.AdicionaElemento(item)
+		go func() {
 			time.Sleep(2 * time.Second)
-			mapa.RemoveElemento(item.id)
+			mapa.RemoveElemento(item.Id)
 		}()
 		return true
-    }
-	go func (){
+	}
+	go func() {
 		for {
 			x := rand.Intn(80)
 			y := rand.Intn(30)
-			if mapa.GetElemento(x, y).tipo == "empty" {
+			if mapa.GetElemento(x, y).Tipo == "empty" {
 				adicionaZumbi(x, y)
 				return
 			}
@@ -137,7 +137,7 @@ func DropItem(id int) bool {
 }
 
 func isWall(x int, y int) bool {
-	if mapa.GetElemento(x, y).tipo == "wall" {
+	if mapa.GetElemento(x, y).Tipo == "wall" {
 		return true
 	}
 	return false

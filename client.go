@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/rpc"
 	"strings"
+	"time"
 
 	"github.com/nsf/termbox-go"
 )
@@ -62,13 +63,13 @@ func (gc *GameClient) GetGameState() (string, error) {
     return strings.Join(reply.State, ", "), nil
 }
 
-func (gc *GameClient) GetMap() (Map, error) {
+func (gc *GameClient) GetMap() (*Map, error) {
     args := &ShowMapArgs{}
     reply := &ShowMapReply{}
     err := gc.server.Call("GameServer.ShowMap", args, reply)
     if err != nil {
         fmt.Println("Error to get map:", err)
-        return Map{}, err 
+        return &Map{}, err 
     }
     return reply.Map, nil
 }
@@ -80,7 +81,8 @@ func PrintMap(mapa Map) {
 	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
 	for y, linha := range mapa.Mapa {
 		for x, elem := range linha {
-			termbox.SetCell(x, y, elem.simbolo, elem.cor, elem.corFundo)
+
+			termbox.SetCell(x, y, elem.Simbolo, elem.Cor, elem.CorFundo)
 		}
 	}
 	termbox.Flush()
@@ -97,24 +99,44 @@ func main() {
         return
     }
 
-	success, err := gameClient.Register()
-	if err != nil {
-		fmt.Println("Error to register client", err)
-		return
-	}
-	fmt.Println("Client registered successfully:", success)
-
 	err = termbox.Init()
 	if err != nil {
 		panic(err)
 	}
 	defer termbox.Close()
 
-	mapa, err := gameClient.GetMap()
-	if err != nil {
-		fmt.Println("Error to get map:", err)
-		return
+	eventQueue := make(chan termbox.Event)
+	go func() {
+		for {
+			eventQueue <- termbox.PollEvent()
+		}
+	}()
+
+	tick := time.Tick(100* time.Millisecond)
+
+	for {
+		select {
+		case ev := <-eventQueue:
+			if ev.Type == termbox.EventKey {
+				if ev.Key == termbox.KeyEsc {
+					return 
+				}
+				if ev.Ch == 'e' {
+					 interagir(playerRef.X, playerRef.Y)
+				} else if ev.Key == termbox.KeySpace {
+					 go atirar()
+				} else {
+					 Mover(ev.Ch)
+				}
+			}
+		case <-tick:
+			mapa, err := gameClient.GetMap()
+			if err != nil {
+				fmt.Println("Error to get map:", err)
+				return
+			}
+			PrintMap(*mapa)
+		}
 	}
-	PrintMap(mapa)
 }
 

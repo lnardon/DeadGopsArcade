@@ -11,7 +11,7 @@ import (
 
 type GameState struct {
 	Players map[string]*ClientState
-	Map     Map
+	Map     *Map
 }
 
 func (gs *GameState) toString() string {
@@ -57,7 +57,7 @@ func (gs *GameServer) SpawnClient() [2]int {
 	x := rand.Intn(80)
 	y := rand.Intn(30)
 
-	if gs.state.Map.GetElemento(x, y).tipo == "empty" {
+	if gs.state.Map.GetElemento(x, y).Tipo == "empty" {
 		adicionaPlayer(x, y)
 		return [2]int{x, y}
 	}
@@ -81,6 +81,7 @@ func (gs *GameServer) GetGameState(args *GameStateArgs, reply *GameStateReply) e
 }
 
 func (gs *GameServer) ShowMap(args *ShowMapArgs, reply *ShowMapReply) error {
+	
     gs.mutex.Lock()
     defer gs.mutex.Unlock()
     reply.Map = gs.state.Map
@@ -89,12 +90,12 @@ func (gs *GameServer) ShowMap(args *ShowMapArgs, reply *ShowMapReply) error {
 
 func main() {
 	carregarMapa("map.txt")
-	//for _ = range maxZombies {
-	//	SpawnaZumbi()
-	//}
+	for _ = range maxZombies {
+		SpawnaZumbi()
+	}
 
 	gameServer := NewGameServer()
-	gameServer.state.Map = mapa
+	gameServer.state.Map = &mapa
 	rpc.Register(gameServer)
 	listener, err := net.Listen("tcp", ":3696")
 	if err != nil {

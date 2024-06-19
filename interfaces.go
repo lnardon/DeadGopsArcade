@@ -29,7 +29,7 @@ type GameStateReply struct {
 type ShowMapArgs struct{}
 
 type ShowMapReply struct {
-    Map Map
+    Map *Map
 }
 
 type GameServerInterface interface {
