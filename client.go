@@ -44,7 +44,7 @@ func (gc *GameClient) GetGameState() (GameState, error) {
 		}, err
     }
 
-	fmt.Println("State:", reply.State.toString())
+	//fmt.Println("State:", reply.State.toString())
     return reply.State, nil
 }
 
@@ -62,17 +62,16 @@ func (gc *GameClient) GetMap() (*Map, error) {
         return nil, fmt.Errorf("nil map received from server")
     }
 
-    fmt.Println(reply.Map.toString(), "mapa")
+	PrintMap(reply.Map)
     return reply.Map, nil
 }
 
 
-func PrintMap(mapa Map) {
+func PrintMap(mapa *Map) {
 	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
-	for y, linha := range mapa.Mapa {
-		for x, elem := range linha {
-			termbox.SetCell(x, y, elem.Simbolo, elem.Cor, elem.CorFundo)
-			fmt.Println("Elemento", elem.toString())
+	for _, linha := range mapa.Mapa {
+		for _, elem := range linha {
+			termbox.SetCell(elem.X, elem.Y, elem.Simbolo, elem.Cor, elem.CorFundo)
 		}
 	}
 	termbox.Flush()
@@ -127,12 +126,14 @@ func main() {
 				return
 			}
 
+			/*
 			state, err := gameClient.GetGameState()
 			if err != nil {
 				fmt.Println("Error to get game state:", err)
 				return
 			}
 			fmt.Println("State:", state.toString())
+			*/
 		}
 	}
 }

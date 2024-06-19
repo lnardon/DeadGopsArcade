@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"fmt"
 	"math/rand"
 	"os"
 	"sync"
@@ -67,7 +66,7 @@ func (mapa *Map) AdicionaElemento(elemento *Elemento) {
 	if mapa.Mapa != nil {
 		mapa.MontaMapa()
 	}
-    fmt.Println(mapa.toString())
+    //fmt.Println(mapa.toString())
 }
 
 
