@@ -1,15 +1,17 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"net/rpc"
+	"os"
 	"strings"
 
 	"github.com/nsf/termbox-go"
 )
 
 type GameClient struct {
-	server *rpc.Client
+	server   *rpc.Client
 	clientID string
 }
 
@@ -19,7 +21,7 @@ func NewGameClient(serverAddress string, clientID string) (*GameClient, error) {
 		return nil, err
 	}
 	return &GameClient{
-		server: client,
+		server:   client,
 		clientID: clientID,
 	}, nil
 }
@@ -37,50 +39,57 @@ func (gc *GameClient) Register() (bool, error) {
 }
 
 func (gc *GameClient) SendCommand(command string, sequenceNumber int) (string, error) {
-    args := &CommandArgs{
-        ClientID:       gc.clientID,
-        Command:        command,
-        SequenceNumber: sequenceNumber,
-    }
-    reply := &CommandReply{}
-    err := gc.server.Call("GameServer.SendCommand", args, reply)
-    if err != nil {
-        return "", err
-    }
-    return reply.Result, nil
+	args := &CommandArgs{
+		ClientID:       gc.clientID,
+		Command:        command,
+		SequenceNumber: sequenceNumber,
+	}
+	reply := &CommandReply{}
+	err := gc.server.Call("GameServer.SendCommand", args, reply)
+	if err != nil {
+		return "", err
+	}
+	return reply.Result, nil
 }
 
 func (gc *GameClient) GetGameState() (string, error) {
-    args := &GameStateArgs{
-        ClientID: gc.clientID,
-    }
-    reply := &GameStateReply{}
-    err := gc.server.Call("GameServer.GetGameState", args, reply)
-    if err != nil {
-        return "", err
-    }
-    return strings.Join(reply.State, ", "), nil
+	args := &GameStateArgs{
+		ClientID: gc.clientID,
+	}
+	reply := &GameStateReply{}
+	err := gc.server.Call("GameServer.GetGameState", args, reply)
+	if err != nil {
+		return "", err
+	}
+	return strings.Join(reply.State, ", "), nil
 }
 
 func (gc *GameClient) GetMap() (Map, error) {
-    var mapa Map
-    err := gc.server.Call("GameServer.ShowMap", &struct{}{}, &mapa)
-    if err != nil {
-        fmt.Println("Error to get map:", err)
-        return Map{}, err 
-    }
-    return mapa, nil
+	var mapa Map
+	err := gc.server.Call("GameServer.ShowMap", &struct{}{}, &mapa)
+	if err != nil {
+		fmt.Println("Error to get map:", err)
+		return Map{}, err
+	}
+	return mapa, nil
 }
 
 func main() {
-	serverAddress := "localhost:3696"
 	clientID := "exampleClientID"
 
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("What is the server IP + Port to connect?: ")
+	serverAddress, err := reader.ReadString('\n')
+	if err != nil {
+		fmt.Println("Error reading input:", err)
+		return
+	}
+
 	gameClient, err := NewGameClient(serverAddress, clientID)
-    if err != nil {
-        fmt.Println("Error to connect in port", err)
-        return
-    }
+	if err != nil {
+		fmt.Println("Error to connect in port", err)
+		return
+	}
 
 	success, err := gameClient.Register()
 	if err != nil {
@@ -99,6 +108,4 @@ func main() {
 
 	}
 
-	
 }
-
