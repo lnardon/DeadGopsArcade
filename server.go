@@ -5,22 +5,8 @@ import (
 	"math/rand"
 	"net"
 	"net/rpc"
-	"strconv"
 	"sync"
 )
-
-type GameState struct {
-	Players map[string]*ClientState
-	Map     *Map
-}
-
-func (gs *GameState) toString() string {
-	var state string
-	for id, player := range gs.Players {
-		state += id + " - Pos: (" + strconv.Itoa(player.PositionX) + ", " + strconv.Itoa(player.PositionY) + "), Health: " + strconv.Itoa(player.Health) + "\n"
-	}
-	return state
-}
 
 type GameServer struct {
 	clients  map[string]*ClientState
@@ -48,13 +34,18 @@ func (gs *GameServer) RegisterClient(args *RegisterArgs, reply *RegisterReply) e
 	gs.mutex.Lock()
 	defer gs.mutex.Unlock()
 	if _, exists := gs.clients[args.ClientID]; !exists {
-		gs.clients[args.ClientID] = &ClientState{}
-		gs.clients[args.ClientID].PositionX = position[0]
-		gs.clients[args.ClientID].PositionY = position[1]
+		gs.clients[args.ClientID] = &ClientState{
+			ID: 	  args.ClientID,
+			PositionX: position[0],
+			PositionY: position[1],
+			Health:   100,
+		}
 		reply.Success = true
 	} else {
 		reply.Success = false
 	}
+
+	fmt.Println("Client", gs.clients[args.ClientID].toString(), args.ClientID)
 	return nil
 }
 
@@ -65,14 +56,36 @@ func (gs *GameServer) SpawnClient() [2]int {
 }
 
 func (gs *GameServer) SendCommand(args *CommandArgs, reply *CommandReply) error {
-	// Command processing logic goes here
+	fmt.Println("Received command", args.Command, "from", args.ClientID, args.Command == 'w')
+	gs.mutex.Lock()
+	defer gs.mutex.Unlock()
+	if client, exists := gs.clients[args.ClientID]; exists {
+		switch args.Command {
+		case 'w':
+			client.PositionY--
+			gs.state.Map.Elementos[0].Move(client.PositionX, client.PositionY, gs.state.Map)
+		case 'a':
+			client.PositionX--
+			gs.state.Map.Elementos[0].Move(client.PositionX, client.PositionY, gs.state.Map)
+		case 's':
+			client.PositionY++
+			gs.state.Map.Elementos[0].Move(client.PositionX, client.PositionY, gs.state.Map)
+		case 'd':
+			client.PositionX++
+			gs.state.Map.Elementos[0].Move(client.PositionX, client.PositionY, gs.state.Map)
+		}
+		reply.Result = "Executed!"
+	} else {
+		reply.Result = "Error"
+	}
+
 	return nil
 }
 
 func (gs *GameServer) GetGameState(args *GameStateArgs, reply *GameStateReply) error {
 	gs.mutex.Lock()
 	defer gs.mutex.Unlock()
-	reply.State = []string{gs.state.toString()}
+	reply.State = gs.state
 	return nil
 }
 
@@ -90,10 +103,6 @@ func (gs *GameServer) ShowMap(args *ShowMapArgs, reply *ShowMapReply) error {
 
 func main() {
 	carregarMapa("map.txt")
-	// for _ = range maxZombies {
-	// 	SpawnaZumbi()
-	// }
-
 	gameServer := NewGameServer()
 	gameServer.state.Map = &mapa
 	rpc.Register(gameServer)

@@ -3,16 +3,10 @@ package main
 import (
 	"fmt"
 	"net/rpc"
-	"strings"
 	"time"
 
 	"github.com/nsf/termbox-go"
 )
-
-type GameClient struct {
-	server *rpc.Client
-	clientID string
-}
 
 func NewGameClient(serverAddress string, clientID string) (*GameClient, error) {
 	client, err := rpc.Dial("tcp", serverAddress)
@@ -37,30 +31,21 @@ func (gc *GameClient) Register() (bool, error) {
 	return reply.Success, nil
 }
 
-func (gc *GameClient) SendCommand(command string, sequenceNumber int) (string, error) {
-    args := &CommandArgs{
-        ClientID:       gc.clientID,
-        Command:        command,
-        SequenceNumber: sequenceNumber,
-    }
-    reply := &CommandReply{}
-    err := gc.server.Call("GameServer.SendCommand", args, reply)
-    if err != nil {
-        return "", err
-    }
-    return reply.Result, nil
-}
-
-func (gc *GameClient) GetGameState() (string, error) {
+func (gc *GameClient) GetGameState() (GameState, error) {
     args := &GameStateArgs{
         ClientID: gc.clientID,
     }
     reply := &GameStateReply{}
     err := gc.server.Call("GameServer.GetGameState", args, reply)
     if err != nil {
-        return "", err
+        return GameState{
+			Map: nil,
+			Players: nil,
+		}, err
     }
-    return strings.Join(reply.State, ", "), nil
+
+	fmt.Println("State:", reply.State.toString())
+    return reply.State, nil
 }
 
 func (gc *GameClient) GetMap() (*Map, error) {
@@ -83,23 +68,21 @@ func (gc *GameClient) GetMap() (*Map, error) {
 
 
 func PrintMap(mapa Map) {
-	mutex.Lock()
-	defer mutex.Unlock()
-
 	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
 	for y, linha := range mapa.Mapa {
 		for x, elem := range linha {
-
 			termbox.SetCell(x, y, elem.Simbolo, elem.Cor, elem.CorFundo)
+			fmt.Println("Elemento", elem.toString())
 		}
 	}
 	termbox.Flush()
 }
 
-
 func main() {
 	serverAddress := "localhost:3696"
 	clientID := "exampleClientID"
+
+	
 
 	gameClient, err := NewGameClient(serverAddress, clientID)
     if err != nil {
@@ -120,7 +103,7 @@ func main() {
 		}
 	}()
 
-	tick := time.Tick(250* time.Millisecond)
+	tick := time.Tick(250 * time.Millisecond)
 
 	for {
 		select {
@@ -134,7 +117,7 @@ func main() {
 				} else if ev.Key == termbox.KeySpace {
 					 go atirar()
 				} else {
-					 Mover(ev.Ch)
+					 Mover(ev.Ch, gameClient)
 				}
 			}
 		case <-tick:
@@ -143,8 +126,13 @@ func main() {
 				fmt.Println("Error to get map:", err)
 				return
 			}
-			PrintMap(mapa)
-			
+
+			state, err := gameClient.GetGameState()
+			if err != nil {
+				fmt.Println("Error to get game state:", err)
+				return
+			}
+			fmt.Println("State:", state.toString())
 		}
 	}
 }

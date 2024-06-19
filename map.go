@@ -64,7 +64,6 @@ func (mapa *Map) AdicionaElemento(elemento *Elemento) {
 
     mapa.Elementos = append(mapa.Elementos, elemento)
 
-    fmt.Println("Elemento adicionado")
 	if mapa.Mapa != nil {
 		mapa.MontaMapa()
 	}
