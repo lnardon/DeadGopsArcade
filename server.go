@@ -76,7 +76,7 @@ func (gs *GameServer) SendCommand(args *CommandArgs, reply *CommandReply) error 
 func (gs *GameServer) GetGameState(args *GameStateArgs, reply *GameStateReply) error {
 	gs.mutex.Lock()
 	defer gs.mutex.Unlock()
-	reply.State = []string{gs.state.toString()}
+	reply.State = gs.state
 	return nil
 }
 

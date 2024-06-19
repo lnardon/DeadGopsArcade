@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/rpc"
 	"os"
-	"strings"
 
 	"github.com/nsf/termbox-go"
 )
@@ -52,16 +51,16 @@ func (gc *GameClient) SendCommand(command string, sequenceNumber int) (string, e
 	return reply.Result, nil
 }
 
-func (gc *GameClient) GetGameState() (string, error) {
+func (gc *GameClient) GetGameState() (GameState, error) {
 	args := &GameStateArgs{
 		ClientID: gc.clientID,
 	}
 	reply := &GameStateReply{}
 	err := gc.server.Call("GameServer.GetGameState", args, reply)
 	if err != nil {
-		return "", err
+		return GameState{}, err
 	}
-	return strings.Join(reply.State, ", "), nil
+	return reply.State, nil
 }
 
 func (gc *GameClient) GetMap() (Map, error) {

@@ -23,7 +23,7 @@ type GameStateArgs struct {
 }
 
 type GameStateReply struct {
-	State []string // TODO
+	State GameState
 }
 
 type GameServerInterface interface {
@@ -31,4 +31,3 @@ type GameServerInterface interface {
 	SendCommand(args *CommandArgs, reply *CommandReply) error
 	GetGameState(args *GameStateArgs, reply *GameStateReply) error
 }
-
