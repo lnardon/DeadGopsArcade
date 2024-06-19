@@ -56,7 +56,7 @@ type GameServerInterface interface {
 
 func (gc *GameClient) SendCommand(command rune, sequenceNumber int) (string, error) {
     args := &CommandArgs{
-        ClientID:       "player",
+        ClientID:       gc.clientID,
         Command:        command,
         SequenceNumber: sequenceNumber,
     }

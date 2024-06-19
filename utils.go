@@ -8,7 +8,7 @@ import (
 	"github.com/nsf/termbox-go"
 )
 
-func Mover(comando rune, gameClient *GameClient) {
+func Mover(comando rune, numeroComando int, gameClient *GameClient) {
 	lastMove = comando
 	// switch comando {
 	// case 'w':
@@ -20,9 +20,8 @@ func Mover(comando rune, gameClient *GameClient) {
 	// case 'd':
 	// 	playerRef.Move(playerRef.X+1, playerRef.Y, &mapa)
 	// }
-
 	if gameClient != nil {
-		_, err := gameClient.SendCommand(comando, 0)
+		_, err := gameClient.SendCommand(comando, numeroComando)
 		if err != nil {
 			fmt.Println("Error to send command:", err)
 		}

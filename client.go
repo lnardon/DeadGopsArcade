@@ -2,12 +2,14 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 	"net/rpc"
 	"time"
 
 	"github.com/nsf/termbox-go"
 )
 
+var numeroComando int = 0
 func NewGameClient(serverAddress string, clientID string) (*GameClient, error) {
 	client, err := rpc.Dial("tcp", serverAddress)
 	if err != nil {
@@ -23,6 +25,7 @@ func (gc *GameClient) Register() (bool, error) {
 	args := &RegisterArgs{
 		ClientID: gc.clientID,
 	}
+	fmt.Print(args.ClientID)
 	reply := &RegisterReply{}
 	err := gc.server.Call("GameServer.RegisterClient", args, reply)
 	if err != nil {
@@ -79,15 +82,16 @@ func PrintMap(mapa *Map) {
 
 func main() {
 	serverAddress := "localhost:3696"
-	clientID := "exampleClientID"
 
-	
-
-	gameClient, err := NewGameClient(serverAddress, clientID)
+    randomNumber := rand.Intn(100)
+	fmt.Print(string(randomNumber))
+	gameClient, err := NewGameClient(serverAddress, string(randomNumber))
     if err != nil {
         fmt.Println("Error to connect in port", err)
         return
     }
+
+	gameClient.Register()
 
 	err = termbox.Init()
 	if err != nil {
@@ -116,8 +120,14 @@ func main() {
 				} else if ev.Key == termbox.KeySpace {
 					 go atirar()
 				} else {
-					 Mover(ev.Ch, gameClient)
+					 Mover(ev.Ch, numeroComando, gameClient)
+					 numeroComando++
 				}
+			}
+			_, err := gameClient.GetMap()
+			if err != nil {
+				fmt.Println("Error to get map:", err)
+				return
 			}
 		case <-tick:
 			_, err := gameClient.GetMap()

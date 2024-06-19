@@ -60,20 +60,20 @@ func (gs *GameServer) SendCommand(args *CommandArgs, reply *CommandReply) error 
 	gs.mutex.Lock()
 	defer gs.mutex.Unlock()
 	if client, exists := gs.clients[args.ClientID]; exists {
+		elemento := gs.state.Map.GetElemento(client.PositionX, client.PositionY)
 		switch args.Command {
 		case 'w':
 			client.PositionY--
-			gs.state.Map.Elementos[0].Move(client.PositionX, client.PositionY, gs.state.Map)
 		case 'a':
 			client.PositionX--
-			gs.state.Map.Elementos[0].Move(client.PositionX, client.PositionY, gs.state.Map)
 		case 's':
 			client.PositionY++
-			gs.state.Map.Elementos[0].Move(client.PositionX, client.PositionY, gs.state.Map)
 		case 'd':
 			client.PositionX++
-			gs.state.Map.Elementos[0].Move(client.PositionX, client.PositionY, gs.state.Map)
 		}
+		fmt.Println("andei ", client.PositionX, client.PositionY)
+		elemento.Move(client.PositionX, client.PositionY, gs.state.Map)
+		gs.state.Map.MontaMapa()
 		reply.Result = "Executed!"
 	} else {
 		reply.Result = "Error"
@@ -118,12 +118,6 @@ func main() {
 		if err != nil {
 			continue
 		}
-		gameServer.RegisterClient(
-			&RegisterArgs{
-				ClientID: "player",
-			},
-			&RegisterReply{},
-		)
 		go rpc.ServeConn(conn)
 	}
 
