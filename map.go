@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"math/rand"
 	"os"
 	"sync"
@@ -50,19 +51,26 @@ func (mapa *Map) AdicionaIterativa() {
 }
 
 func (mapa *Map) AdicionaElemento(elemento *Elemento) {
-	mutex.Lock()
-	defer mutex.Unlock()
+    mutex.Lock()
+    defer mutex.Unlock()
 
-	if elemento.Tipo == "bullet" && tiroEmExecucao > 5 {
-		return
+    if elemento.Tipo == "bullet" && tiroEmExecucao > 5 {
+        return
+    }
+
+    if elemento.Tipo == "bullet" {
+        tiroEmExecucao++
+    }
+
+    mapa.Elementos = append(mapa.Elementos, elemento)
+
+    fmt.Println("Elemento adicionado")
+	if mapa.Mapa != nil {
+		mapa.MontaMapa()
 	}
-
-	if elemento.Tipo == "bullet" {
-		tiroEmExecucao++
-	}
-	mapa.Elementos = append(mapa.Elementos, elemento)
-
+    fmt.Println(mapa.toString())
 }
+
 
 func (mapa *Map) RemoveElemento(id int) {
 	for index, elemento := range mapa.Elementos {
@@ -223,4 +231,15 @@ func SpawnaZumbi() {
 		return
 	}
 	SpawnaZumbi()
+}
+
+func(mapa *Map)toString() string {
+	str := ""
+	for _, linha := range mapa.Mapa {
+		for _, elem := range linha {
+			str += string(elem.Simbolo)
+		}
+		str += "\n"
+	}
+	return str
 }

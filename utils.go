@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"math/rand"
 	"time"
 
@@ -37,7 +38,7 @@ func adicionaZumbi(x int, y int) {
 	go zumbi.MoverZumbi()
 }
 
-func adicionaPlayer(x int, y int) {
+func adicionaPlayer(x int, y int, mapa *Map) {
 	player := &Elemento{
 		Id:         gerarIdUnico(),
 		Tipo:       "player",
@@ -50,6 +51,7 @@ func adicionaPlayer(x int, y int) {
 		Y:          y,
 	}
 	mapa.AdicionaElemento(player)
+	fmt.Println("Player adicionado")
 }
 
 func gerarIdUnico() int {

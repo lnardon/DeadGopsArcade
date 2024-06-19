@@ -69,10 +69,18 @@ func (gc *GameClient) GetMap() (*Map, error) {
     err := gc.server.Call("GameServer.ShowMap", args, reply)
     if err != nil {
         fmt.Println("Error to get map:", err)
-        return &Map{}, err 
+        return nil, err
     }
+
+    if reply.Map == nil {
+        fmt.Println("Received nil map from server")
+        return nil, fmt.Errorf("nil map received from server")
+    }
+
+    fmt.Println(reply.Map.toString(), "mapa")
     return reply.Map, nil
 }
+
 
 func PrintMap(mapa Map) {
 	mutex.Lock()
@@ -112,7 +120,7 @@ func main() {
 		}
 	}()
 
-	tick := time.Tick(100* time.Millisecond)
+	tick := time.Tick(250* time.Millisecond)
 
 	for {
 		select {
@@ -130,12 +138,13 @@ func main() {
 				}
 			}
 		case <-tick:
-			mapa, err := gameClient.GetMap()
+			_, err := gameClient.GetMap()
 			if err != nil {
 				fmt.Println("Error to get map:", err)
 				return
 			}
-			PrintMap(*mapa)
+			PrintMap(mapa)
+			
 		}
 	}
 }

@@ -39,11 +39,16 @@ func NewGameServer() *GameServer {
 }
 
 func (gs *GameServer) RegisterClient(args *RegisterArgs, reply *RegisterReply) error {
+	fmt.Println("Registering client", args.ClientID)
+	position := gs.SpawnClient()
+	fmt.Println("Client spawned at", position[0], position[1])
+
+	adicionaPlayer(position[0], position[1], gs.state.Map)
+
 	gs.mutex.Lock()
 	defer gs.mutex.Unlock()
 	if _, exists := gs.clients[args.ClientID]; !exists {
 		gs.clients[args.ClientID] = &ClientState{}
-		position := gs.SpawnClient()
 		gs.clients[args.ClientID].PositionX = position[0]
 		gs.clients[args.ClientID].PositionY = position[1]
 		reply.Success = true
@@ -56,20 +61,11 @@ func (gs *GameServer) RegisterClient(args *RegisterArgs, reply *RegisterReply) e
 func (gs *GameServer) SpawnClient() [2]int {
 	x := rand.Intn(80)
 	y := rand.Intn(30)
-
-	if gs.state.Map.GetElemento(x, y).Tipo == "empty" {
-		adicionaPlayer(x, y)
-		return [2]int{x, y}
-	}
-	gs.SpawnClient()
-	return [2]int{0, 0}
+	return [2]int{x, y}
 }
 
 func (gs *GameServer) SendCommand(args *CommandArgs, reply *CommandReply) error {
-	if(args.SequenceNumber == gs.clients[args.ClientID].LastSequenceNum) {
-		reply.Result = "command already processed"
-		return nil
-	}
+	// Command processing logic goes here
 	return nil
 }
 
@@ -81,18 +77,22 @@ func (gs *GameServer) GetGameState(args *GameStateArgs, reply *GameStateReply) e
 }
 
 func (gs *GameServer) ShowMap(args *ShowMapArgs, reply *ShowMapReply) error {
-	
     gs.mutex.Lock()
     defer gs.mutex.Unlock()
+    if gs.state.Map == nil {
+        fmt.Println("Map is nil")
+        return fmt.Errorf("map data is not available")
+    }
     reply.Map = gs.state.Map
     return nil
 }
 
+
 func main() {
 	carregarMapa("map.txt")
-	for _ = range maxZombies {
-		SpawnaZumbi()
-	}
+	// for _ = range maxZombies {
+	// 	SpawnaZumbi()
+	// }
 
 	gameServer := NewGameServer()
 	gameServer.state.Map = &mapa
@@ -103,12 +103,19 @@ func main() {
 	}
 	defer listener.Close()
 
+	fmt.Println("Server is waiting to connect on port:", "3696")
 	for {
-		fmt.Println("Server is waiting to connect in port:", "3696")
 		conn, err := listener.Accept()
 		if err != nil {
 			continue
 		}
+		gameServer.RegisterClient(
+			&RegisterArgs{
+				ClientID: "player",
+			},
+			&RegisterReply{},
+		)
 		go rpc.ServeConn(conn)
 	}
+
 }
