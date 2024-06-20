@@ -9,7 +9,7 @@ import (
 )
 
 type GameServer struct {
-	clients  map[string]*ClientState
+	clients  map[int]*ClientState
 	commands chan CommandArgs
 	state    GameState
 	mutex    sync.Mutex
@@ -17,7 +17,7 @@ type GameServer struct {
 
 func NewGameServer() *GameServer {
 	return &GameServer{
-		clients:  make(map[string]*ClientState),
+		clients:  make(map[int]*ClientState),
 		commands: make(chan CommandArgs, 100),
 		state:    GameState{},
 		mutex:    sync.Mutex{},

@@ -1,7 +1,7 @@
 package main
 
 type ClientState struct {
-	ID 				string
+	ID 				int
 	PositionX       int
 	PositionY       int
 	Health          int

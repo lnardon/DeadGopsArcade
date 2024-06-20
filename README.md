@@ -12,12 +12,17 @@ make
 
 ## Run
 
-Run the command below to start the game
+Run the command below to start the game server
 
 ```bash
-./main
+./server
 ```
 
+Run the command below to start the game client
+
+```bash
+./client
+```
 ## Controls
 
-Use the `w a s d` keys to move the player around the screen and the `space bar` to shoot. To interact with an object press `e` next to it and to exit the game, press the `Esc` key.
+Use the `w a s d` keys to move the player around the screen and press the `Esc` key to close the client.

@@ -7,7 +7,7 @@ import (
 )
 
 type RegisterArgs struct {
-	ClientID string
+	ClientID int
 }
 
 type RegisterReply struct {
@@ -15,7 +15,7 @@ type RegisterReply struct {
 }
 
 type CommandArgs struct {
-	ClientID       string
+	ClientID       int
 	Command        rune
 	SequenceNumber int
 }
@@ -26,11 +26,11 @@ type CommandReply struct {
 
 type GameClient struct {
 	server *rpc.Client
-	clientID string
+	clientID int
 }
 
 type GameStateArgs struct {
-	ClientID string
+	ClientID int
 }
 
 type GameState struct {

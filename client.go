@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"math/rand"
 	"net/rpc"
 	"time"
 
@@ -10,7 +9,7 @@ import (
 )
 
 var numeroComando int = 0
-func NewGameClient(serverAddress string, clientID string) (*GameClient, error) {
+func NewGameClient(serverAddress string, clientID int) (*GameClient, error) {
 	client, err := rpc.Dial("tcp", serverAddress)
 	if err != nil {
 		return nil, err
@@ -83,9 +82,8 @@ func PrintMap(mapa *Map) {
 func main() {
 	serverAddress := "localhost:3696"
 
-    randomNumber := rand.Intn(100)
-	fmt.Print(string(randomNumber))
-	gameClient, err := NewGameClient(serverAddress, string(randomNumber))
+    randomNumber := time.Now().UnixMicro()
+	gameClient, err := NewGameClient(serverAddress, int(randomNumber))
     if err != nil {
         fmt.Println("Error to connect in port", err)
         return
