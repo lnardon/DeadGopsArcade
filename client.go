@@ -9,13 +9,14 @@ import (
 )
 
 var numeroComando int = 0
+
 func NewGameClient(serverAddress string, clientID int) (*GameClient, error) {
 	client, err := rpc.Dial("tcp", serverAddress)
 	if err != nil {
 		return nil, err
 	}
 	return &GameClient{
-		server: client,
+		server:   client,
 		clientID: clientID,
 	}, nil
 }
@@ -34,40 +35,39 @@ func (gc *GameClient) Register() (bool, error) {
 }
 
 func (gc *GameClient) GetGameState() (GameState, error) {
-    args := &GameStateArgs{
-        ClientID: gc.clientID,
-    }
-    reply := &GameStateReply{}
-    err := gc.server.Call("GameServer.GetGameState", args, reply)
-    if err != nil {
-        return GameState{
-			Map: nil,
+	args := &GameStateArgs{
+		ClientID: gc.clientID,
+	}
+	reply := &GameStateReply{}
+	err := gc.server.Call("GameServer.GetGameState", args, reply)
+	if err != nil {
+		return GameState{
+			Map:     nil,
 			Players: nil,
 		}, err
-    }
+	}
 
 	//fmt.Println("State:", reply.State.toString())
-    return reply.State, nil
+	return reply.State, nil
 }
 
 func (gc *GameClient) GetMap() (*Map, error) {
-    args := &ShowMapArgs{}
-    reply := &ShowMapReply{}
-    err := gc.server.Call("GameServer.ShowMap", args, reply)
-    if err != nil {
-        fmt.Println("Error to get map:", err)
-        return nil, err
-    }
+	args := &ShowMapArgs{}
+	reply := &ShowMapReply{}
+	err := gc.server.Call("GameServer.ShowMap", args, reply)
+	if err != nil {
+		fmt.Println("Error to get map:", err)
+		return nil, err
+	}
 
-    if reply.Map == nil {
-        fmt.Println("Received nil map from server")
-        return nil, fmt.Errorf("nil map received from server")
-    }
+	if reply.Map == nil {
+		fmt.Println("Received nil map from server")
+		return nil, fmt.Errorf("nil map received from server")
+	}
 
 	PrintMap(reply.Map)
-    return reply.Map, nil
+	return reply.Map, nil
 }
-
 
 func PrintMap(mapa *Map) {
 	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
@@ -80,14 +80,14 @@ func PrintMap(mapa *Map) {
 }
 
 func main() {
-	serverAddress := "localhost:3696"
+	serverAddress := "10.32.161.87:3696"
 
-    randomNumber := time.Now().UnixMicro()
+	randomNumber := time.Now().UnixMicro()
 	gameClient, err := NewGameClient(serverAddress, int(randomNumber))
-    if err != nil {
-        fmt.Println("Error to connect in port", err)
-        return
-    }
+	if err != nil {
+		fmt.Println("Error to connect in port", err)
+		return
+	}
 
 	gameClient.Register()
 
@@ -111,15 +111,15 @@ func main() {
 		case ev := <-eventQueue:
 			if ev.Type == termbox.EventKey {
 				if ev.Key == termbox.KeyEsc {
-					return 
+					return
 				}
 				if ev.Ch == 'e' {
-					 interagir(playerRef.X, playerRef.Y)
+					interagir(playerRef.X, playerRef.Y)
 				} else if ev.Key == termbox.KeySpace {
-					 go atirar()
+					go atirar()
 				} else {
-					 Mover(ev.Ch, numeroComando, gameClient)
-					 numeroComando++
+					Mover(ev.Ch, numeroComando, gameClient)
+					numeroComando++
 				}
 			}
 			_, err := gameClient.GetMap()
@@ -135,14 +135,13 @@ func main() {
 			}
 
 			/*
-			state, err := gameClient.GetGameState()
-			if err != nil {
-				fmt.Println("Error to get game state:", err)
-				return
-			}
-			fmt.Println("State:", state.toString())
+				state, err := gameClient.GetGameState()
+				if err != nil {
+					fmt.Println("Error to get game state:", err)
+					return
+				}
+				fmt.Println("State:", state.toString())
 			*/
 		}
 	}
 }
-
