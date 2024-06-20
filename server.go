@@ -63,12 +63,33 @@ func (gs *GameServer) SendCommand(args *CommandArgs, reply *CommandReply) error 
 		elemento := gs.state.Map.GetElemento(client.PositionX, client.PositionY)
 		switch args.Command {
 		case 'w':
+			nextEl := gs.state.Map.GetElemento(client.PositionX, client.PositionY-1)
+			if(nextEl.Tangivel == true){
+				reply.Result = "Executed!"
+				return nil
+			}
 			client.PositionY--
+
 		case 'a':
+			nextEl := gs.state.Map.GetElemento(client.PositionX-1, client.PositionY)
+			if(nextEl.Tangivel == true){
+				reply.Result = "Executed!"
+				return nil
+			}
 			client.PositionX--
 		case 's':
+			nextEl := gs.state.Map.GetElemento(client.PositionX, client.PositionY+1)
+			if(nextEl.Tangivel == true){
+				reply.Result = "Executed!"
+				return nil
+			}
 			client.PositionY++
 		case 'd':
+			nextEl := gs.state.Map.GetElemento(client.PositionX+1, client.PositionY)
+			if(nextEl.Tangivel == true){
+				reply.Result = "Executed!"
+				return nil
+			}
 			client.PositionX++
 		}
 		fmt.Println("andei ", client.PositionX, client.PositionY)
